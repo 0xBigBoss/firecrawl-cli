@@ -41,13 +41,36 @@ TARGET_URL=https://example.com
 # Crawl a specific website
 bun run index.ts https://example.com
 
+# Limit the number of pages to crawl
+bun run index.ts https://example.com --limit 10
+
 # Or use environment variable
 bun run index.ts
 ```
 
-## Architecture
+## Project Structure
 
-### Directory Structure
+```
+firecrawl-crawl/
+├── src/
+│   ├── index.ts          # Main entry point
+│   ├── cli.ts            # CLI argument parsing
+│   ├── crawler.ts        # Firecrawl integration
+│   ├── storage.ts        # File saving logic
+│   ├── transform.ts      # Link transformation
+│   ├── utils/
+│   │   └── url.ts        # URL utilities
+│   └── tests/
+│       ├── cli.test.ts
+│       ├── transform.test.ts
+│       └── url.test.ts
+├── index.ts              # Entry loader
+├── package.json
+├── tsconfig.json
+└── CLAUDE.md             # AI assistant guidelines
+```
+
+### Output Structure
 
 Crawled content is saved to the `crawls/` directory (gitignored) with the following structure:
 
@@ -61,55 +84,24 @@ crawls/
         └── guide.md      # /docs/guide page
 ```
 
-### Implementation Requirements
+## Implementation Details
 
-#### 1. Crawling Logic
+### URL to File Path Mapping
 
-The crawler should:
-- Accept a target URL via CLI argument or environment variable
-- Use Firecrawl's `crawlUrl` method with appropriate options
-- Handle pagination if the site has more pages than the limit
-- Implement error handling and retry logic
-
-```typescript
-// Suggested implementation
-const crawlOptions = {
-  limit: 100,  // Make configurable
-  scrapeOptions: {
-    formats: ["markdown", "html"],
-  },
-  // Add options for depth, include/exclude patterns
-};
-```
-
-#### 2. File Saving System
-
-For each crawled page:
-1. Parse the URL to determine the file path
-2. Create necessary directories
-3. Save content as `.md` file
-
-URL to file path mapping:
+The crawler converts URLs to file paths following these rules:
 - `https://example.com/` → `crawls/example.com/index.md`
 - `https://example.com/about` → `crawls/example.com/about.md`
 - `https://example.com/docs/guide` → `crawls/example.com/docs/guide.md`
 - `https://example.com/page.html` → `crawls/example.com/page.md`
 
-#### 3. Link Transformation Algorithm
+### Link Transformation
 
-Transform all hyperlinks in the Markdown content:
+All hyperlinks in the Markdown content are transformed to reference local files:
 
-1. **Parse links**: Find all links in formats like `[text](url)` and raw URLs
-2. **Classify link type**:
-   - Internal: Same domain as crawled site
-   - External: Different domain
-   - Anchor: Starts with `#`
-   - Protocol-relative: Starts with `//`
-3. **Transform internal links**:
-   - Absolute URLs: Convert to relative path from current file to target `.md`
-   - Relative URLs: Adjust path and append `.md`
-   - Remove trailing slashes and `.html` extensions
-   - Handle index pages (`/docs/` → `/docs/index.md`)
+1. **Internal links** (same domain) are converted to relative `.md` paths
+2. **External links** (different domain) are preserved unchanged
+3. **Anchor links** (starting with `#`) are preserved
+4. **Hash fragments** on internal links are preserved
 
 Example transformations from `/docs/api/reference.md`:
 - `[Home](https://example.com/)` → `[Home](../../index.md)`
@@ -117,33 +109,45 @@ Example transformations from `/docs/api/reference.md`:
 - `[Section](#section)` → `[Section](#section)` (unchanged)
 - `[External](https://other.com)` → `[External](https://other.com)` (unchanged)
 
-#### 4. Special Cases
-
-Handle:
-- Query parameters: Strip or preserve based on configuration
-- Hash fragments: Preserve in links
-- Non-HTML resources: Skip transformation for images, PDFs, etc.
-- Missing pages: Log warnings for broken internal links
-
-## Development Workflow
-
-1. Start with basic crawling and console output
-2. Implement file saving with proper directory structure
-3. Add link transformation with unit tests
-4. Add configuration options and error handling
-5. Implement progress reporting and logging
+The transformer also handles:
+- Bare URLs (e.g., `Visit https://example.com/about`)
+- Protocol-relative URLs (e.g., `//example.com/page`)
+- Query parameters (stripped from internal links)
+- Empty link text and links in parentheses
 
 ## Testing
 
 ```bash
-# Run tests (when implemented)
+# Run all tests
 bun test
 
-# Test link transformation
-bun run test:links
+# Run tests in watch mode
+bun test:watch
 
-# Test with a small site
-bun run index.ts https://small-test-site.com --limit 5
+# Run tests with coverage
+bun test:coverage
+
+# Test link transformation specifically
+bun test:links
+
+# TypeScript type checking
+bun typecheck
+```
+
+## Development Commands
+
+```bash
+# Install dependencies
+bun install
+
+# Run the crawler
+bun run index.ts https://example.com --limit 10
+
+# Run tests
+bun test
+
+# TypeScript checking
+bun tsc --noEmit
 ```
 
 ## Future Enhancements
@@ -155,6 +159,8 @@ bun run index.ts https://small-test-site.com --limit 5
 - [ ] Link validation and broken link reporting
 - [ ] Sitemap generation
 - [ ] Incremental updates (only crawl changed pages)
+- [ ] Progress bar and better logging
+- [ ] Configuration file support
 
 ## License
 

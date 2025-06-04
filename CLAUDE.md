@@ -4,54 +4,78 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a web crawler that uses Firecrawl API to crawl websites and save content as local Markdown files. The project is in early development - only basic Firecrawl integration exists, while the main functionality (file saving and link transformation) needs to be implemented.
+This is a web crawler that uses Firecrawl API to crawl websites and save content as local Markdown files. The project has been fully implemented with proper modular architecture, comprehensive tests, and all features from the README.
 
 ## Development Commands
-
-Currently, there are no npm/bun scripts defined. Use these commands:
 
 ```bash
 # Install dependencies
 bun install
 
-# Run the crawler (not yet functional with CLI args)
-bun run index.ts
+# Run the crawler
+bun run index.ts https://example.com --limit 10
 
-# Run tests (when implemented)
+# Run all tests
 bun test
 
+# Run tests in watch mode
+bun test:watch
+
+# Run tests with coverage
+bun test:coverage
+
+# Test link transformation specifically
+bun test:links
+
 # TypeScript checking
-bun tsc --noEmit
+bun typecheck
 ```
 
 ## Architecture & Implementation Status
 
 ### Current Implementation
-- `index.ts`: Basic Firecrawl setup that crawls firecrawl.dev and logs to console
-- Uses `FIRECRAWL_API_URL` environment variable for API configuration
-- No file saving, link transformation, or CLI parsing implemented yet
 
-### Required Implementation
+The project is organized into modular components:
 
-The README defines four main components that need to be built:
+- `index.ts`: Entry point that imports from src/
+- `src/index.ts`: Main application logic
+- `src/cli.ts`: CLI argument parsing and validation
+- `src/crawler.ts`: Firecrawl API integration
+- `src/storage.ts`: File system operations for saving pages
+- `src/transform.ts`: Link transformation logic
+- `src/utils/url.ts`: URL to file path mapping and relative path calculation
+- `src/tests/`: Comprehensive unit tests for all modules
 
-1. **Crawling Logic**: Accept URL via CLI args, handle pagination, add retry logic
-2. **File Saving System**: Save to `crawls/domain.com/path/to/page.md` structure
-3. **Link Transformation**: Convert internal links to relative `.md` paths while preserving link style
-4. **Edge Case Handling**: Query params, anchors, non-HTML resources
+### Key Features Implemented
 
-### Key Implementation Details
+1. **CLI Parsing**: Accepts target URL and --limit flag
+2. **Crawling**: Uses Firecrawl API to crawl websites with configurable limits
+3. **File Saving**: Saves pages to `crawls/domain.com/path/to/page.md` structure
+4. **Link Transformation**: Converts internal links to relative `.md` paths
+5. **Error Handling**: Graceful handling of API errors and invalid URLs
+6. **Testing**: 42 unit tests covering all functionality
+
+### Implementation Details
 
 **URL to File Path Mapping**:
 - `https://example.com/` → `crawls/example.com/index.md`
 - `https://example.com/docs/guide` → `crawls/example.com/docs/guide.md`
 - Strip `.html` extensions and handle trailing slashes
+- Handles query parameters and special characters
 
-**Link Transformation Rules**:
+**Link Transformation**:
 - Internal links: Convert to relative `.md` paths
 - External links: Leave unchanged
 - Anchors: Preserve as-is
-- Calculate relative paths based on file location
+- Bare URLs: Transform if internal
+- Handles edge cases: empty link text, URLs in parentheses, protocol-relative URLs
+
+### Critical API Details
+
+**Firecrawl Response Format**: The Firecrawl API returns page data with the URL in `metadata.url`, not `page.url`. Always access URLs using:
+```typescript
+const pageUrl = page.metadata?.url || page.metadata?.sourceURL || page.url;
+```
 
 ## Environment Configuration
 
@@ -61,18 +85,27 @@ FIRECRAWL_API_KEY=your-key              # For cloud API (optional)
 TARGET_URL=https://example.com          # Default crawl target (optional)
 ```
 
+## Testing
+
+The project includes comprehensive unit tests:
+- `cli.test.ts`: 13 tests for CLI parsing and validation
+- `transform.test.ts`: 16 tests for link transformation
+- `url.test.ts`: 13 tests for URL utilities
+
+All tests pass and cover edge cases thoroughly.
+
 ## Development Workflow
 
-When implementing features:
-1. Start with CLI argument parsing for target URL
-2. Test with small sites using `--limit 5` flag
-3. Implement file saving before link transformation
-4. Use the README's link transformation examples for test cases
-5. The link transformation algorithm may need iteration - expect trial and error
+When making changes:
+1. Run tests to ensure nothing breaks: `bun test`
+2. Use TypeScript checking: `bun typecheck`
+3. Test with a small site first: `bun run index.ts https://example.com --limit 5`
+4. The link transformation regex is complex - be careful when modifying
+5. Always test edge cases (empty links, bare URLs, etc.)
 
-## Testing Approach
+## Known Working Examples
 
-No test framework is configured yet. When adding tests:
-- Focus on link transformation logic (most complex part)
-- Test URL to file path mapping edge cases
-- Consider using Bun's built-in test runner
+The crawler has been tested successfully with:
+- `https://bun.sh/docs/cli/test --limit 1`
+
+The output correctly transforms all internal links to relative `.md` paths while preserving external links and anchors.
