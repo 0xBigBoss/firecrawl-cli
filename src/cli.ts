@@ -10,6 +10,8 @@ export interface CLIOptions {
   verbose: boolean;
   help: boolean;
   version: boolean;
+  apiUrl?: string;
+  apiKey?: string;
 }
 
 const VERSION = "1.0.0";
@@ -20,25 +22,34 @@ fcrawl - Web crawler using Firecrawl API
 Usage: fcrawl [URL] [OPTIONS]
 
 Arguments:
-  URL                    Target URL to crawl (or set TARGET_URL env var)
+  URL                      Target URL to crawl (or set TARGET_URL env var)
 
 Options:
-  -l, --limit <number>   Maximum number of pages to crawl (default: 100)
-  -o, --output-dir <dir> Output directory for crawled pages (default: ./crawls)
-  -v, --verbose          Enable verbose output (sets NODE_DEBUG=fcrawl:*)
-  -h, --help             Show this help message
-  --version              Show version information
+  -l, --limit <number>     Maximum number of pages to crawl (default: 100)
+  -o, --output-dir <dir>   Output directory for crawled pages (default: ./crawls)
+  -v, --verbose            Enable verbose output (sets NODE_DEBUG=fcrawl:*)
+  -h, --help               Show this help message
+  --version                Show version information
+  --api-url <url>          Firecrawl API URL (overrides FIRECRAWL_API_URL env var)
+  --api-key <key>          Firecrawl API key (overrides FIRECRAWL_API_KEY env var)
 
 Examples:
   fcrawl https://example.com
   fcrawl https://example.com --limit 50
   fcrawl https://example.com -o ./output -v
+  fcrawl https://example.com --api-url http://localhost:3002
+  fcrawl https://example.com --api-key fc-YOUR_KEY
 
 Environment Variables:
-  TARGET_URL             Default target URL if not provided as argument
-  FIRECRAWL_API_URL      Firecrawl API URL (for self-hosted instances)
-  FIRECRAWL_API_KEY      Firecrawl API key
-  NODE_DEBUG             Enable debug logging (e.g., NODE_DEBUG=fcrawl:*)
+  TARGET_URL               Default target URL if not provided as argument
+  FIRECRAWL_API_URL        Firecrawl API URL (default: uses cloud API)
+  FIRECRAWL_API_KEY        Firecrawl API key (required for cloud API)
+  NODE_DEBUG               Enable debug logging (e.g., NODE_DEBUG=fcrawl:*)
+
+TODO: Future versions will support saving API configuration to:
+  - Linux/BSD: $XDG_CONFIG_HOME/fcrawl/config.json or ~/.config/fcrawl/config.json
+  - macOS: ~/Library/Application Support/fcrawl/config.json
+  - Windows: %APPDATA%\fcrawl\config.json
 `;
 
 export function parseCLIArgs(args: string[]): CLIOptions {
@@ -70,6 +81,14 @@ export function parseCLIArgs(args: string[]): CLIOptions {
       version: {
         type: "boolean",
         default: false
+      },
+      "api-url": {
+        type: "string",
+        default: undefined
+      },
+      "api-key": {
+        type: "string",
+        default: undefined
       }
     },
     allowPositionals: true
@@ -87,7 +106,9 @@ export function parseCLIArgs(args: string[]): CLIOptions {
     outputDir: values["output-dir"] as string,
     verbose: values.verbose as boolean,
     help: values.help as boolean,
-    version: values.version as boolean
+    version: values.version as boolean,
+    apiUrl: values["api-url"] as string | undefined,
+    apiKey: values["api-key"] as string | undefined
   };
   
   log("Parsed options: %o", options);
@@ -117,6 +138,30 @@ export function validateOptions(options: CLIOptions): string | null {
   if (options.limit <= 0) {
     return "Error: Limit must be a positive number";
   }
+  
+  // Check for Firecrawl API configuration
+  const apiUrl = options.apiUrl || process.env.FIRECRAWL_API_URL;
+  const apiKey = options.apiKey || process.env.FIRECRAWL_API_KEY;
+  
+  // If using cloud API (no custom URL), API key is required
+  if (!apiUrl && !apiKey) {
+    return `Error: Firecrawl API configuration missing
+
+You must provide either:
+1. A self-hosted Firecrawl URL: --api-url http://localhost:3002
+2. A Firecrawl API key: --api-key fc-YOUR_KEY
+
+Or set environment variables:
+  export FIRECRAWL_API_URL=http://localhost:3002
+  export FIRECRAWL_API_KEY=fc-YOUR_KEY
+
+Run 'fcrawl --help' for more information`;
+  }
+  
+  // TODO: In future versions, check for config file at:
+  // - Linux/BSD: $XDG_CONFIG_HOME/fcrawl/config.json or ~/.config/fcrawl/config.json
+  // - macOS: ~/Library/Application Support/fcrawl/config.json
+  // - Windows: %APPDATA%\\fcrawl\\config.json
   
   return null;
 }

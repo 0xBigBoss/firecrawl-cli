@@ -85,6 +85,28 @@ FIRECRAWL_API_KEY=your-key              # For cloud API (optional)
 TARGET_URL=https://example.com          # Default crawl target (optional)
 ```
 
+### API Configuration
+
+The Firecrawl API can be configured via CLI arguments or environment variables:
+
+```bash
+# Using CLI arguments (overrides env vars)
+fcrawl https://example.com --api-url http://localhost:3002
+fcrawl https://example.com --api-key fc-YOUR_KEY
+
+# Using environment variables
+export FIRECRAWL_API_URL=http://localhost:3002
+export FIRECRAWL_API_KEY=fc-YOUR_KEY
+fcrawl https://example.com
+```
+
+**TODO**: Future versions will support saving API configuration to a config file:
+- Linux/BSD: `$XDG_CONFIG_HOME/fcrawl/config.json` or `~/.config/fcrawl/config.json`
+- macOS: `~/Library/Application Support/fcrawl/config.json`
+- Windows: `%APPDATA%\fcrawl\config.json`
+
+This will allow users to save their API credentials securely without needing to set environment variables or pass them as CLI arguments each time.
+
 ## Testing
 
 The project includes comprehensive unit tests:

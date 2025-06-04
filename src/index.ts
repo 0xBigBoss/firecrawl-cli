@@ -23,8 +23,8 @@ async function main() {
   try {
     log("Starting crawl with target: %s", options.targetUrl);
     await crawl(options.targetUrl!, {
-      apiUrl: process.env.FIRECRAWL_API_URL,
-      apiKey: process.env.FIRECRAWL_API_KEY,
+      apiUrl: options.apiUrl || process.env.FIRECRAWL_API_URL,
+      apiKey: options.apiKey || process.env.FIRECRAWL_API_KEY,
       limit: options.limit,
       outputDir: options.outputDir,
     });

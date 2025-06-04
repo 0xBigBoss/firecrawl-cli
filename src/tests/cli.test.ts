@@ -80,7 +80,42 @@ describe("parseArgs (legacy)", () => {
 });
 
 describe("validateOptions", () => {
-  it("should return null for valid options", () => {
+  beforeEach(() => {
+    // Clear environment variables before each test
+    delete process.env.FIRECRAWL_API_URL;
+    delete process.env.FIRECRAWL_API_KEY;
+  });
+
+  it("should return null for valid options with API URL", () => {
+    const options: CLIOptions = { 
+      targetUrl: "https://example.com", 
+      limit: 50,
+      outputDir: "./crawls",
+      verbose: false,
+      help: false,
+      version: false,
+      apiUrl: "http://localhost:3002"
+    };
+    const result = validateOptions(options);
+    expect(result).toBeNull();
+  });
+
+  it("should return null for valid options with API key", () => {
+    const options: CLIOptions = { 
+      targetUrl: "https://example.com", 
+      limit: 50,
+      outputDir: "./crawls",
+      verbose: false,
+      help: false,
+      version: false,
+      apiKey: "fc-test-key"
+    };
+    const result = validateOptions(options);
+    expect(result).toBeNull();
+  });
+
+  it("should return null when API config is in env vars", () => {
+    process.env.FIRECRAWL_API_URL = "http://localhost:3002";
     const options: CLIOptions = { 
       targetUrl: "https://example.com", 
       limit: 50,
@@ -91,6 +126,21 @@ describe("validateOptions", () => {
     };
     const result = validateOptions(options);
     expect(result).toBeNull();
+  });
+
+  it("should return error when no API config is provided", () => {
+    const options: CLIOptions = { 
+      targetUrl: "https://example.com", 
+      limit: 50,
+      outputDir: "./crawls",
+      verbose: false,
+      help: false,
+      version: false
+    };
+    const result = validateOptions(options);
+    expect(result).toContain("Error: Firecrawl API configuration missing");
+    expect(result).toContain("--api-url");
+    expect(result).toContain("--api-key");
   });
 
   it("should return error message when targetUrl is missing", () => {
