@@ -1,5 +1,5 @@
 import FirecrawlApp from "@mendable/firecrawl-js";
-import type { ScrapeOptions } from "./cli";
+import type { ScrapeOptions } from "./schemas/cli";
 import { loggers } from "./logger";
 import { savePage } from "./storage";
 

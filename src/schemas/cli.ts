@@ -1,50 +1,57 @@
-import { z } from "zod";
+export type CommandType = "scrape" | "crawl" | "map";
 
-// Base schema for common options
-export const BaseOptionsSchema = z.object({
-  verbose: z.boolean().default(false),
-  help: z.boolean().default(false),
-  version: z.boolean().default(false),
-  apiUrl: z.string().url().optional(),
-  apiKey: z.string().min(1).optional(),
-  outputDir: z.string().default("./crawls"),
-});
+export interface BaseOptions {
+  command?: CommandType;
+  verbose: boolean;
+  help: boolean;
+  version: boolean;
+  apiUrl?: string;
+  apiKey?: string;
+  outputDir: string;
+}
 
-// Scrape command schema
-export const ScrapeOptionsSchema = BaseOptionsSchema.extend({
-  command: z.literal("scrape"),
-  urls: z.array(z.string().url()).min(1),
-  formats: z.array(z.enum(["markdown", "html", "screenshot"])).optional(),
-  screenshot: z.boolean().default(false),
-  waitFor: z.number().positive().max(60000).optional(),
-});
+export interface ScrapeOptions extends BaseOptions {
+  command: "scrape";
+  urls: string[];
+  formats?: string[];
+  screenshot?: boolean;
+  waitFor?: number;
+  onlyMainContent?: boolean;
+  includeTags?: string[];
+  excludeTags?: string[];
+  headers?: Record<string, string>;
+  mobile?: boolean;
+  skipTlsVerification?: boolean;
+  timeout?: number;
+  parsePDF?: boolean;
+  removeBase64Images?: boolean;
+}
 
-// Crawl command schema
-export const CrawlOptionsSchema = BaseOptionsSchema.extend({
-  command: z.literal("crawl"),
-  url: z.string().url(),
-  limit: z.number().positive().optional(),
-});
+export interface CrawlOptions extends BaseOptions {
+  command: "crawl";
+  url: string;
+  limit: number;
+  maxDepth?: number;
+  allowBackwardLinks?: boolean;
+  allowExternalLinks?: boolean;
+  ignoreSitemap?: boolean;
+  sitemapOnly?: boolean;
+  includeSubdomains?: boolean;
+  excludePaths?: string[];
+  includePaths?: string[];
+  webhook?: string;
+}
 
-// Map command schema
-export const MapOptionsSchema = BaseOptionsSchema.extend({
-  command: z.literal("map"),
-  url: z.string().url(),
-  output: z.enum(["file", "console", "both"]).default("file"),
-  limit: z.number().positive().max(10000).optional(),
-  includeSubdomains: z.boolean().default(false),
-});
+export interface MapOptions extends BaseOptions {
+  command: "map";
+  url: string;
+  limit?: number;
+  includeSubdomains?: boolean;
+  output?: "console" | "file" | "both";
+  search?: string;
+  ignoreSitemap?: boolean;
+  sitemapOnly?: boolean;
+  timeout?: number;
+}
 
-// Union type for all CLI options
-export const CLIOptionsSchema = z.discriminatedUnion("command", [
-  ScrapeOptionsSchema,
-  CrawlOptionsSchema,
-  MapOptionsSchema,
-]);
-
-// Type exports
-export type BaseOptions = z.infer<typeof BaseOptionsSchema>;
-export type ScrapeOptions = z.infer<typeof ScrapeOptionsSchema>;
-export type CrawlOptions = z.infer<typeof CrawlOptionsSchema>;
-export type MapOptions = z.infer<typeof MapOptionsSchema>;
-export type CLIOptions = z.infer<typeof CLIOptionsSchema>;
+export type CLIOptions = ScrapeOptions | CrawlOptions | MapOptions | BaseOptions;

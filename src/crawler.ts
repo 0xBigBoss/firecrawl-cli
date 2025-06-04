@@ -4,7 +4,7 @@ import { savePage } from "./storage";
 
 const log = loggers.crawler;
 
-import type { CrawlOptions } from "./cli";
+import type { CrawlOptions } from "./schemas/cli";
 
 export type CrawlerOptions = CrawlOptions;
 

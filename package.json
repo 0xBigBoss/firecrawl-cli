@@ -30,7 +30,11 @@
   },
   "dependencies": {
     "@mendable/firecrawl-js": "^1.25.3",
-    "commander": "^14.0.0",
+    "@types/react": "^19.1.6",
+    "ink": "^6.0.0",
+    "pastel": "^3.0.0",
+    "react": "^19.1.0",
+    "react-devtools-core": "^6.1.2",
     "zod": "^3.25.51"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"

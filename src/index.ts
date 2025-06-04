@@ -1,65 +1,23 @@
-import {
-  type CrawlOptions,
-  type MapOptions,
-  type ScrapeOptions,
-  parseCLIArgs,
-  validateOptions,
-} from "./cli";
-import { crawl } from "./crawler";
-import { loggers } from "./logger";
-import { map } from "./mapper";
-import { scrape } from "./scraper";
+#!/usr/bin/env node
+import Pastel from "pastel";
+import { z } from "zod";
+import ScrapeCommand from "./commands/scrape";
+import CrawlCommand from "./commands/crawl";
+import MapCommand from "./commands/map";
+import DefaultCommand from "./commands/index";
 
-const log = loggers.main;
+const app = new Pastel({
+  name: "fcrawl",
+  version: "1.1.0",
+  description: "Web crawler and scraper using Firecrawl API",
+});
 
-async function main() {
-  const args = process.argv.slice(2);
-  log("Starting fcrawl with args: %o", args);
-  const options = parseCLIArgs(args);
+// Register commands manually since import.meta doesn't work in compiled executables
+app.command("scrape", "Scrape one or more URLs", ScrapeCommand);
+app.command("crawl", "Crawl a website starting from URL", CrawlCommand);
+app.command("map", "Discover all URLs on a website", MapCommand);
 
-  const error = validateOptions(options);
-  if (error) {
-    // Handle help/version messages as normal output
-    if (options.help || options.version) {
-      console.log(error);
-      process.exit(0);
-    }
-    console.error(error);
-    process.exit(1);
-  }
+// Default command for legacy support
+app.setDefaultCommand(DefaultCommand);
 
-  try {
-    // Route to appropriate command
-    switch (options.command) {
-      case "scrape": {
-        const scrapeOpts = options as ScrapeOptions;
-        log("Starting scrape command with %d URLs", scrapeOpts.urls.length);
-        await scrape(scrapeOpts.urls, scrapeOpts);
-        break;
-      }
-
-      case "crawl": {
-        const crawlOpts = options as CrawlOptions;
-        log("Starting crawl command with target: %s", crawlOpts.url);
-        await crawl(crawlOpts.url, crawlOpts);
-        break;
-      }
-
-      case "map": {
-        const mapOpts = options as MapOptions;
-        log("Starting map command with target: %s", mapOpts.url);
-        await map(mapOpts.url, mapOpts);
-        break;
-      }
-
-      default:
-        console.error("Error: Unknown command");
-        process.exit(1);
-    }
-  } catch (error) {
-    log("Command failed: %o", error);
-    process.exit(1);
-  }
-}
-
-main();
+await app.run();
