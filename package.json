@@ -14,15 +14,21 @@
     "test:coverage": "bun test --coverage",
     "test:links": "bun test src/tests/transform.test.ts",
     "test:integration": "bun run build && bun test src/tests/integration.test.ts",
-    "typecheck": "bun tsc --noEmit"
+    "typecheck": "bun tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "check": "biome check ."
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "@mendable/firecrawl-js": "^1.25.3"
+    "@mendable/firecrawl-js": "^1.25.3",
+    "zod": "^3.25.51"
   }
 }

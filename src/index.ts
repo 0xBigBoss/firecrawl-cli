@@ -1,8 +1,14 @@
-import { parseCLIArgs, validateOptions, CLIOptions, CrawlOptions, ScrapeOptions, MapOptions } from "./cli";
+import {
+  type CrawlOptions,
+  type MapOptions,
+  type ScrapeOptions,
+  parseCLIArgs,
+  validateOptions,
+} from "./cli";
 import { crawl } from "./crawler";
-import { scrape } from "./scraper";
-import { map } from "./mapper";
 import { loggers } from "./logger";
+import { map } from "./mapper";
+import { scrape } from "./scraper";
 
 const log = loggers.main;
 
@@ -10,7 +16,7 @@ async function main() {
   const args = process.argv.slice(2);
   log("Starting fcrawl with args: %o", args);
   const options = parseCLIArgs(args);
-  
+
   const error = validateOptions(options);
   if (error) {
     // Handle help/version messages as normal output
@@ -21,7 +27,7 @@ async function main() {
     console.error(error);
     process.exit(1);
   }
-  
+
   try {
     // Route to appropriate command
     switch (options.command) {
@@ -31,31 +37,25 @@ async function main() {
         await scrape(scrapeOpts.urls, scrapeOpts);
         break;
       }
-      
+
       case "crawl": {
         const crawlOpts = options as CrawlOptions;
-        log("Starting crawl command with target: %s", crawlOpts.targetUrl);
-        await crawl(crawlOpts.targetUrl, {
-          apiUrl: crawlOpts.apiUrl || process.env.FIRECRAWL_API_URL,
-          apiKey: crawlOpts.apiKey || process.env.FIRECRAWL_API_KEY,
-          limit: crawlOpts.limit,
-          outputDir: crawlOpts.outputDir,
-        });
+        log("Starting crawl command with target: %s", crawlOpts.url);
+        await crawl(crawlOpts.url, crawlOpts);
         break;
       }
-      
+
       case "map": {
         const mapOpts = options as MapOptions;
-        log("Starting map command with target: %s", mapOpts.targetUrl);
-        await map(mapOpts.targetUrl, mapOpts);
+        log("Starting map command with target: %s", mapOpts.url);
+        await map(mapOpts.url, mapOpts);
         break;
       }
-      
+
       default:
         console.error("Error: Unknown command");
         process.exit(1);
     }
-    
   } catch (error) {
     log("Command failed: %o", error);
     process.exit(1);

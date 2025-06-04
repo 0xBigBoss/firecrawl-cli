@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 import { parseArgs, validateOptions } from "../cli";
 import type { CLIOptions } from "../cli";
 
 describe("parseArgs (legacy)", () => {
   beforeEach(() => {
     // Clear environment variable before each test
-    delete process.env.TARGET_URL;
+    process.env.TARGET_URL = undefined;
   });
 
   it("should parse URL as first argument", () => {
@@ -82,33 +82,33 @@ describe("parseArgs (legacy)", () => {
 describe("validateOptions", () => {
   beforeEach(() => {
     // Clear environment variables before each test
-    delete process.env.FIRECRAWL_API_URL;
-    delete process.env.FIRECRAWL_API_KEY;
+    process.env.FIRECRAWL_API_URL = undefined;
+    process.env.FIRECRAWL_API_KEY = undefined;
   });
 
   it("should return null for valid options with API URL", () => {
-    const options: CLIOptions = { 
-      targetUrl: "https://example.com", 
+    const options: CLIOptions = {
+      targetUrl: "https://example.com",
       limit: 50,
       outputDir: "./crawls",
       verbose: false,
       help: false,
       version: false,
-      apiUrl: "http://localhost:3002"
+      apiUrl: "http://localhost:3002",
     };
     const result = validateOptions(options);
     expect(result).toBeNull();
   });
 
   it("should return null for valid options with API key", () => {
-    const options: CLIOptions = { 
-      targetUrl: "https://example.com", 
+    const options: CLIOptions = {
+      targetUrl: "https://example.com",
       limit: 50,
       outputDir: "./crawls",
       verbose: false,
       help: false,
       version: false,
-      apiKey: "fc-test-key"
+      apiKey: "fc-test-key",
     };
     const result = validateOptions(options);
     expect(result).toBeNull();
@@ -116,26 +116,26 @@ describe("validateOptions", () => {
 
   it("should return null when API config is in env vars", () => {
     process.env.FIRECRAWL_API_URL = "http://localhost:3002";
-    const options: CLIOptions = { 
-      targetUrl: "https://example.com", 
+    const options: CLIOptions = {
+      targetUrl: "https://example.com",
       limit: 50,
       outputDir: "./crawls",
       verbose: false,
       help: false,
-      version: false
+      version: false,
     };
     const result = validateOptions(options);
     expect(result).toBeNull();
   });
 
   it("should return error when no API config is provided", () => {
-    const options: CLIOptions = { 
-      targetUrl: "https://example.com", 
+    const options: CLIOptions = {
+      targetUrl: "https://example.com",
       limit: 50,
       outputDir: "./crawls",
       verbose: false,
       help: false,
-      version: false
+      version: false,
     };
     const result = validateOptions(options);
     expect(result).toContain("Error: Firecrawl API configuration missing");
@@ -144,13 +144,13 @@ describe("validateOptions", () => {
   });
 
   it("should return error message when targetUrl is missing", () => {
-    const options: CLIOptions = { 
-      targetUrl: undefined, 
+    const options: CLIOptions = {
+      targetUrl: undefined,
       limit: 50,
       outputDir: "./crawls",
       verbose: false,
       help: false,
-      version: false
+      version: false,
     };
     const result = validateOptions(options);
     expect(result).toContain("Error: No target URL provided");
@@ -158,13 +158,13 @@ describe("validateOptions", () => {
   });
 
   it("should return error message when targetUrl is empty string", () => {
-    const options: CLIOptions = { 
-      targetUrl: "", 
+    const options: CLIOptions = {
+      targetUrl: "",
       limit: 50,
       outputDir: "./crawls",
       verbose: false,
       help: false,
-      version: false
+      version: false,
     };
     const result = validateOptions(options);
     expect(result).toContain("Error: No target URL provided");
