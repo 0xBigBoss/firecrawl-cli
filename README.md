@@ -229,6 +229,22 @@ https://example.com/about
 ...
 ```
 
+## API Compatibility
+
+This tool is designed to mirror the Firecrawl API options. We reference the official Firecrawl types from their repository to ensure compatibility:
+
+**Reference**: https://github.com/mendableai/firecrawl/blob/077c5dd8ec6b047961c80990f186bfab05ea035b/apps/api/src/controllers/v1/types.ts#L589
+
+The CLI options are mapped directly to the Firecrawl API parameters, including:
+- `includePaths` / `excludePaths` - Path filtering
+- `maxDepth` / `maxDiscoveryDepth` - Crawl depth control
+- `ignoreRobotsTxt` - Robots.txt handling
+- `deduplicateSimilarURLs` - URL deduplication
+- `ignoreQueryParameters` - Query parameter handling
+- `regexOnFullURL` - Regex pattern matching
+- `delay` - Request throttling
+- And all other crawlerOptions defined in the Firecrawl API
+
 ## Testing
 
 ```bash

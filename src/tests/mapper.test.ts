@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
 import * as fs from "node:fs/promises";
-import type { MapOptions } from "../schemas/cli";
 import { map } from "../mapper";
+import type { MapOptions } from "../schemas/cli";
 
 // Mock the fs module
 mock.module("node:fs/promises", () => ({
@@ -73,17 +73,20 @@ describe("mapper", () => {
       // Should save both JSON and TXT files
       expect(mockWriteFile).toHaveBeenCalledTimes(2);
 
+      // Get the actual calls to check what was passed
+      const calls = mockWriteFile.mock.calls;
+
+      // Find JSON and TXT calls
+      const jsonCall = calls.find((call: any) => call[0].includes("sitemap.json"));
+      const txtCall = calls.find((call: any) => call[0].includes("sitemap.txt"));
+
       // Check JSON file
-      expect(mockWriteFile).toHaveBeenCalledWith(
-        expect.stringContaining("sitemap.json"),
-        expect.stringContaining('"source":"https://example.com"'),
-      );
+      expect(jsonCall).toBeDefined();
+      expect(jsonCall[1]).toContain('"source": "https://example.com"');
 
       // Check TXT file
-      expect(mockWriteFile).toHaveBeenCalledWith(
-        expect.stringContaining("sitemap.txt"),
-        expect.stringContaining("# URL Map for https://example.com"),
-      );
+      expect(txtCall).toBeDefined();
+      expect(txtCall[1]).toContain("# URL Map for https://example.com");
     });
 
     it("should output to console when specified", async () => {

@@ -7,7 +7,9 @@ import React from "react";
 // biome-ignore lint/complexity/noBannedTypes: Generic component props
 export async function renderComponent<P = {}>(Component: React.FC<P>, props: P): Promise<void> {
   return new Promise((resolve, reject) => {
-    const { unmount, waitUntilExit } = render(React.createElement(Component as React.FC<any>, props));
+    const { unmount, waitUntilExit } = render(
+      React.createElement(Component as React.FC<any>, props),
+    );
 
     waitUntilExit()
       .then(() => resolve())

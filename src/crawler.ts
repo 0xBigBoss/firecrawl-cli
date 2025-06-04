@@ -30,6 +30,8 @@ export async function crawl(url: string, options: CrawlerOptions): Promise<void>
   };
 
   // Add additional crawl options
+  // These map to the official Firecrawl API crawlerOptions
+  // Reference: https://github.com/mendableai/firecrawl/blob/077c5dd8ec6b047961c80990f186bfab05ea035b/apps/api/src/controllers/v1/types.ts#L589
   if (options.maxDepth !== undefined) {
     crawlOptions.maxDepth = options.maxDepth;
   }
@@ -51,7 +53,7 @@ export async function crawl(url: string, options: CrawlerOptions): Promise<void>
   }
 
   if (options.includeSubdomains) {
-    crawlOptions.includeSubdomains = options.includeSubdomains;
+    crawlOptions.allowSubdomains = options.includeSubdomains;
   }
 
   if (options.excludePaths) {
@@ -64,6 +66,30 @@ export async function crawl(url: string, options: CrawlerOptions): Promise<void>
 
   if (options.webhook) {
     crawlOptions.webhook = options.webhook;
+  }
+
+  if (options.ignoreRobotsTxt) {
+    crawlOptions.ignoreRobotsTxt = options.ignoreRobotsTxt;
+  }
+
+  if (options.deduplicateSimilarUrls !== undefined) {
+    crawlOptions.deduplicateSimilarURLs = options.deduplicateSimilarUrls;
+  }
+
+  if (options.ignoreQueryParameters) {
+    crawlOptions.ignoreQueryParameters = options.ignoreQueryParameters;
+  }
+
+  if (options.regexOnFullUrl) {
+    crawlOptions.regexOnFullURL = options.regexOnFullUrl;
+  }
+
+  if (options.delay !== undefined) {
+    crawlOptions.delay = options.delay;
+  }
+
+  if (options.maxDiscoveryDepth !== undefined) {
+    crawlOptions.maxDiscoveryDepth = options.maxDiscoveryDepth;
   }
 
   try {

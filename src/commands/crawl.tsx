@@ -20,6 +20,12 @@ type Props = {
     excludePaths?: string[];
     includePaths?: string[];
     webhook?: string;
+    ignoreRobotsTxt?: boolean;
+    deduplicateSimilarUrls?: boolean;
+    ignoreQueryParameters?: boolean;
+    regexOnFullUrl?: boolean;
+    delay?: number;
+    maxDiscoveryDepth?: number;
     verbose?: boolean;
     apiUrl?: string;
     apiKey?: string;

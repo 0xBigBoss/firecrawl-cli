@@ -9,6 +9,9 @@ describe("subcommand integration tests", () => {
   const fcrawlPath = "./bin/fcrawl";
 
   beforeAll(async () => {
+    // Set up test environment
+    process.env.FIRECRAWL_API_URL = "http://localhost:3002";
+
     // Build the executable
     await $`bun run build`;
 
@@ -53,7 +56,7 @@ describe("subcommand integration tests", () => {
 
     it("should handle multiple formats", async () => {
       const result =
-        await $`${fcrawlPath} scrape https://example.com --formats markdown,html -o ${testOutputDir}`.quiet();
+        await $`${fcrawlPath} scrape https://example.com --formats markdown html -o ${testOutputDir}`.quiet();
 
       expect(result.exitCode).toBe(0);
 
@@ -93,6 +96,17 @@ describe("subcommand integration tests", () => {
       expect(result.exitCode).toBe(0);
       expect(result.stdout.toString()).toContain("Crawl a website");
       expect(result.stdout.toString()).toContain("--limit");
+    });
+
+    it("should accept new crawl options", async () => {
+      const result =
+        await $`${fcrawlPath} crawl https://example.com --limit 1 --ignore-robots-txt --deduplicate-similar-urls --delay 100 -o ${testOutputDir}`.quiet();
+
+      expect(result.exitCode).toBe(0);
+
+      // Check that at least one file was created
+      const domainDir = join(testOutputDir, "example.com");
+      expect(existsSync(domainDir)).toBe(true);
     });
   });
 
@@ -138,16 +152,22 @@ describe("subcommand integration tests", () => {
     });
   });
 
-  describe("deprecated direct URL usage", () => {
-    it("should show deprecation warning and use crawl command", async () => {
+  describe("direct URL usage", () => {
+    it("should work with direct URL command", async () => {
       const result =
         await $`${fcrawlPath} https://example.com --limit 1 -o ${testOutputDir}`.quiet();
 
       expect(result.exitCode).toBe(0);
-      expect(result.stderr.toString()).toContain("DEPRECATED");
-      expect(result.stderr.toString()).toContain("fcrawl crawl");
 
-      // Should still work and create files
+      // Should work and create files
+      expect(existsSync(join(testOutputDir, "example.com", "index.md"))).toBe(true);
+    });
+
+    it("should support new crawl options", async () => {
+      const result =
+        await $`${fcrawlPath} https://example.com --limit 1 --ignore-robots-txt --delay 100 -o ${testOutputDir}`.quiet();
+
+      expect(result.exitCode).toBe(0);
       expect(existsSync(join(testOutputDir, "example.com", "index.md"))).toBe(true);
     });
   });

@@ -48,10 +48,10 @@ export function createCLI(): Command {
     .option("--remove-base64-images", "Remove base64 images", false)
     .action(async (urls: string[], options) => {
       const globalOptions = program.opts();
-      
+
       // Validate before rendering
       validateApiConfig({ ...options, ...globalOptions });
-      
+
       await renderComponent(ScrapeCommand, {
         args: [urls],
         options: {
@@ -86,12 +86,18 @@ export function createCLI(): Command {
     .option("--exclude-paths <paths...>", "Paths to exclude")
     .option("--include-paths <paths...>", "Paths to include only")
     .option("--webhook <url>", "Webhook URL for completion")
+    .option("--ignore-robots-txt", "Ignore robots.txt restrictions", false)
+    .option("--deduplicate-similar-urls", "Remove similar URLs during crawl", true)
+    .option("--ignore-query-parameters", "Ignore query parameters when comparing URLs", false)
+    .option("--regex-on-full-url", "Apply include/exclude regex patterns on full URL", false)
+    .option("--delay <ms>", "Delay between requests in ms", Number.parseInt)
+    .option("--max-discovery-depth <number>", "Maximum depth for URL discovery", Number.parseInt)
     .action(async (url: string, options) => {
       const globalOptions = program.opts();
-      
+
       // Validate before rendering
       validateApiConfig({ ...options, ...globalOptions });
-      
+
       await renderComponent(CrawlCommand, {
         args: [url],
         options: {
@@ -99,6 +105,11 @@ export function createCLI(): Command {
           ...globalOptions,
           excludePaths: options.excludePaths,
           includePaths: options.includePaths,
+          ignoreRobotsTxt: options.ignoreRobotsTxt,
+          deduplicateSimilarUrls: options.deduplicateSimilarUrls,
+          ignoreQueryParameters: options.ignoreQueryParameters,
+          regexOnFullUrl: options.regexOnFullUrl,
+          maxDiscoveryDepth: options.maxDiscoveryDepth,
         },
       });
     });
@@ -118,10 +129,10 @@ export function createCLI(): Command {
     .option("--timeout <ms>", "Timeout in milliseconds", Number.parseInt)
     .action(async (url: string, options) => {
       const globalOptions = program.opts();
-      
+
       // Validate before rendering
       validateApiConfig({ ...options, ...globalOptions });
-      
+
       await renderComponent(MapCommand, {
         args: [url],
         options: {
@@ -131,9 +142,9 @@ export function createCLI(): Command {
       });
     });
 
-  // Legacy support: fcrawl <url>
+  // Default action: fcrawl <url>
   program
-    .argument("[url]", "URL to crawl (deprecated, use 'fcrawl crawl <url>' instead)")
+    .argument("[url]", "URL to crawl")
     .option("-o, --output-dir <dir>", "Output directory", "./crawls")
     .option(
       "-l, --limit <number>",
@@ -141,23 +152,45 @@ export function createCLI(): Command {
       (val) => Number.parseInt(val),
       100,
     )
+    .option("--max-depth <number>", "Maximum crawl depth", Number.parseInt)
+    .option("--allow-backward-links", "Allow crawling parent directory links", false)
+    .option("--allow-external-links", "Allow crawling external domains", false)
+    .option("--ignore-sitemap", "Ignore sitemap.xml", false)
+    .option("--sitemap-only", "Only crawl URLs from sitemap", false)
+    .option("--include-subdomains", "Include URLs from subdomains", false)
+    .option("--exclude-paths <paths...>", "Paths to exclude")
+    .option("--include-paths <paths...>", "Paths to include only")
+    .option("--webhook <url>", "Webhook URL for completion")
+    .option("--ignore-robots-txt", "Ignore robots.txt restrictions", false)
+    .option("--deduplicate-similar-urls", "Remove similar URLs during crawl", true)
+    .option("--ignore-query-parameters", "Ignore query parameters when comparing URLs", false)
+    .option("--regex-on-full-url", "Apply include/exclude regex patterns on full URL", false)
+    .option("--delay <ms>", "Delay between requests in ms", Number.parseInt)
+    .option("--max-discovery-depth <number>", "Maximum depth for URL discovery", Number.parseInt)
     .action(async (url: string | undefined, options) => {
       const globalOptions = program.opts();
-      
+
       // Show help if no URL provided
       if (!url || url.startsWith("-")) {
         program.outputHelp();
         process.exit(1);
       }
-      
+
       // Validate before rendering
       validateApiConfig({ ...options, ...globalOptions });
-      
+
       await renderComponent(DefaultCommand, {
         args: [url],
         options: {
           ...options,
           ...globalOptions,
+          excludePaths: options.excludePaths,
+          includePaths: options.includePaths,
+          ignoreRobotsTxt: options.ignoreRobotsTxt,
+          deduplicateSimilarUrls: options.deduplicateSimilarUrls,
+          ignoreQueryParameters: options.ignoreQueryParameters,
+          regexOnFullUrl: options.regexOnFullUrl,
+          maxDiscoveryDepth: options.maxDiscoveryDepth,
         },
       });
     });

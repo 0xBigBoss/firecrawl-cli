@@ -6,12 +6,27 @@ import type { CrawlOptions } from "../schemas/cli";
 
 const log = loggers.cli;
 
-// Default command for legacy support: fcrawl <url>
+// Default command: fcrawl <url>
 type Props = {
   args: [string | undefined];
   options: {
     outputDir: string;
     limit: number;
+    maxDepth?: number;
+    allowBackwardLinks?: boolean;
+    allowExternalLinks?: boolean;
+    ignoreSitemap?: boolean;
+    sitemapOnly?: boolean;
+    includeSubdomains?: boolean;
+    excludePaths?: string[];
+    includePaths?: string[];
+    webhook?: string;
+    ignoreRobotsTxt?: boolean;
+    deduplicateSimilarUrls?: boolean;
+    ignoreQueryParameters?: boolean;
+    regexOnFullUrl?: boolean;
+    delay?: number;
+    maxDiscoveryDepth?: number;
     verbose?: boolean;
     apiUrl?: string;
     apiKey?: string;
@@ -31,8 +46,6 @@ export default function DefaultCommand({ args: [url], options }: Props) {
 
     const runCrawl = async () => {
       try {
-        console.warn("Warning: Direct URL usage is deprecated. Use 'fcrawl crawl <url>' instead.");
-
         const targetUrl = url || process.env.TARGET_URL;
         if (!targetUrl) {
           throw new Error("No URL provided");
