@@ -1,6 +1,10 @@
 import { urlToFilePath, calculateRelativePath } from "./utils/url";
+import { loggers } from "./logger";
+
+const log = loggers.transform;
 
 export function transformLinks(content: string, currentPageUrl: string, baseUrl: string): string {
+  log("Transforming links for page: %s", currentPageUrl);
   const currentUrl = new URL(currentPageUrl);
   const base = new URL(baseUrl);
   
@@ -19,6 +23,7 @@ export function transformLinks(content: string, currentPageUrl: string, baseUrl:
         if (url.hostname === base.hostname) {
           const targetPath = urlToFilePath(bareUrl, baseUrl);
           const relativePath = calculateRelativePath(currentFilePath, targetPath);
+          log("Transformed bare URL: %s -> %s", bareUrl, relativePath);
           // Preserve the prefix character (space, newline, or parenthesis)
           return `${prefix}${relativePath}`;
         }
@@ -75,6 +80,7 @@ export function transformLinks(content: string, currentPageUrl: string, baseUrl:
       
       // For absolute internal links, convert to relative
       // For relative internal links, adjust the path
+      log("Transformed link: %s -> %s", linkUrl, relativePath);
       return `[${linkText}](${relativePath}${hash})`;
       
     } catch (e) {

@@ -1,6 +1,6 @@
 import { dirname, relative } from "path";
 
-export function urlToFilePath(urlString: string, baseUrl: string): string {
+export function urlToFilePath(urlString: string, baseUrl: string, outputDir: string = "./crawls"): string {
   const url = new URL(urlString);
   const base = new URL(baseUrl);
   
@@ -23,15 +23,15 @@ export function urlToFilePath(urlString: string, baseUrl: string): string {
   }
   
   // Add .md extension
-  const filePath = `crawls/${base.hostname}${pathname}.md`;
+  const filePath = `${outputDir}/${base.hostname}${pathname}.md`;
   
   return filePath;
 }
 
 export function calculateRelativePath(from: string, to: string): string {
-  // Remove 'crawls/' prefix and get relative path
-  const fromPath = from.replace(/^crawls\/[^\/]+/, '');
-  const toPath = to.replace(/^crawls\/[^\/]+/, '');
+  // Remove output dir prefix and domain to get relative path
+  const fromPath = from.replace(/^[^\/]+\/[^\/]+/, '');
+  const toPath = to.replace(/^[^\/]+\/[^\/]+/, '');
   
   const fromDir = dirname(fromPath);
   const relativePath = relative(fromDir, toPath);

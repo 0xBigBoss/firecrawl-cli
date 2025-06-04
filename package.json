@@ -1,13 +1,19 @@
 {
-  "name": "firecrawl-crawl",
+  "name": "fcrawl",
+  "version": "1.0.0",
+  "description": "Web crawler using Firecrawl API that saves pages as local Markdown files",
   "module": "index.ts",
   "type": "module",
-  "private": true,
+  "bin": {
+    "fcrawl": "./fcrawl"
+  },
   "scripts": {
+    "build": "bun run build.ts",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
     "test:links": "bun test src/tests/transform.test.ts",
+    "test:integration": "bun run build && bun test src/tests/integration.test.ts",
     "typecheck": "bun tsc --noEmit"
   },
   "devDependencies": {
