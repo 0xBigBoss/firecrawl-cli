@@ -1,6 +1,11 @@
 import { dirname, relative } from "path";
 
-export function urlToFilePath(urlString: string, baseUrl: string, outputDir: string = "./crawls"): string {
+export function urlToFilePath(
+  urlString: string, 
+  baseUrl: string, 
+  outputDir: string = "./crawls",
+  extension: string = ".md"
+): string {
   const url = new URL(urlString);
   const base = new URL(baseUrl);
   
@@ -17,13 +22,17 @@ export function urlToFilePath(urlString: string, baseUrl: string, outputDir: str
     pathname = "/index";
   }
   
-  // Remove .html extension if present
-  if (pathname.endsWith(".html")) {
-    pathname = pathname.slice(0, -5);
+  // Remove common file extensions if present
+  const extensionsToRemove = [".html", ".htm", ".php", ".asp", ".aspx"];
+  for (const ext of extensionsToRemove) {
+    if (pathname.endsWith(ext)) {
+      pathname = pathname.slice(0, -ext.length);
+      break;
+    }
   }
   
-  // Add .md extension
-  const filePath = `${outputDir}/${base.hostname}${pathname}.md`;
+  // Build file path with specified extension
+  const filePath = `${outputDir}/${base.hostname}${pathname}${extension}`;
   
   return filePath;
 }

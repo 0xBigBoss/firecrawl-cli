@@ -1,13 +1,18 @@
 # firecrawl-crawl
 
-A web crawler that uses the [Firecrawl API](https://firecrawl.dev/docs/api) to crawl websites and save content as Markdown files, maintaining the site's directory structure and transforming hyperlinks to reference the local Markdown files.
+A versatile web crawler and scraper that uses the [Firecrawl API](https://firecrawl.dev/docs/api) to crawl websites, scrape individual pages, and discover site URLs, saving content as Markdown files while maintaining the site's directory structure.
 
 ## Overview
 
-This tool crawls a website and:
-- Saves each page as a Markdown file in a directory structure matching the site's URL hierarchy
-- Transforms all hyperlinks in the content to point to the corresponding local `.md` files
-- Preserves the link style (absolute links remain absolute, relative links remain relative)
+This tool provides three main commands:
+- **crawl**: Crawl entire websites starting from a URL
+- **scrape**: Scrape one or more specific URLs
+- **map**: Discover all URLs on a website (sitemap generation)
+
+All commands:
+- Save pages as Markdown files in a directory structure matching the site's URL hierarchy
+- Transform all hyperlinks in the content to point to the corresponding local `.md` files
+- Preserve the link style (absolute links remain absolute, relative links remain relative)
 
 ## Prerequisites
 
@@ -17,7 +22,15 @@ This tool crawls a website and:
 ## Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/yourusername/firecrawl-crawl.git
+cd firecrawl-crawl
+
+# Install dependencies
 bun install
+
+# Build the executable
+bun run build
 ```
 
 ## Configuration
@@ -30,22 +43,83 @@ FIRECRAWL_API_URL=http://localhost:3002
 
 # Optional: API key if using Firecrawl cloud
 FIRECRAWL_API_KEY=your-api-key-here
+```
 
-# Optional: Target URL to crawl (defaults to CLI argument)
-TARGET_URL=https://example.com
+You can also pass these as CLI arguments:
+```bash
+./fcrawl crawl https://example.com --api-url http://localhost:3002
+./fcrawl scrape https://example.com --api-key fc-YOUR_KEY
 ```
 
 ## Usage
 
+### Crawl Command
+
+Crawl an entire website starting from a URL:
+
 ```bash
-# Crawl a specific website
-bun run index.ts https://example.com
+# Crawl a website
+./fcrawl crawl https://example.com
 
 # Limit the number of pages to crawl
-bun run index.ts https://example.com --limit 10
+./fcrawl crawl https://example.com --limit 10
 
-# Or use environment variable
-bun run index.ts
+# Specify output directory
+./fcrawl crawl https://example.com -o ./output
+
+# Enable verbose logging
+./fcrawl crawl https://example.com -v
+```
+
+### Scrape Command
+
+Scrape one or more specific URLs:
+
+```bash
+# Scrape a single URL
+./fcrawl scrape https://example.com/page1
+
+# Scrape multiple URLs
+./fcrawl scrape https://example.com/page1 https://example.com/page2
+
+# Scrape with specific formats (markdown, html, screenshot)
+./fcrawl scrape https://example.com --formats markdown,html
+
+# Include screenshot
+./fcrawl scrape https://example.com --screenshot
+
+# Wait for dynamic content
+./fcrawl scrape https://example.com --wait-for 5000
+```
+
+### Map Command
+
+Discover all URLs on a website:
+
+```bash
+# Discover URLs and save to file
+./fcrawl map https://example.com
+
+# Output to console
+./fcrawl map https://example.com --output console
+
+# Output to both console and file
+./fcrawl map https://example.com --output both
+
+# Limit number of URLs discovered
+./fcrawl map https://example.com --limit 1000
+
+# Include subdomains
+./fcrawl map https://example.com --include-subdomains
+```
+
+### Legacy Usage (Deprecated)
+
+The tool still supports the legacy direct URL syntax, which defaults to the crawl command:
+
+```bash
+# This still works but shows a deprecation warning
+./fcrawl https://example.com
 ```
 
 ## Project Structure
@@ -53,42 +127,52 @@ bun run index.ts
 ```
 firecrawl-crawl/
 ├── src/
-│   ├── index.ts          # Main entry point
-│   ├── cli.ts            # CLI argument parsing
-│   ├── crawler.ts        # Firecrawl integration
+│   ├── index.ts          # Main entry point with command routing
+│   ├── cli.ts            # CLI argument parsing with subcommand support
+│   ├── crawler.ts        # Crawl command implementation
+│   ├── scraper.ts        # Scrape command implementation
+│   ├── mapper.ts         # Map command implementation
 │   ├── storage.ts        # File saving logic
 │   ├── transform.ts      # Link transformation
+│   ├── logger.ts         # Debug logging utilities
 │   ├── utils/
 │   │   └── url.ts        # URL utilities
 │   └── tests/
 │       ├── cli.test.ts
 │       ├── transform.test.ts
-│       └── url.test.ts
+│       ├── url.test.ts
+│       └── integration.test.ts
 ├── index.ts              # Entry loader
+├── build.ts              # Build script
 ├── package.json
 ├── tsconfig.json
-└── CLAUDE.md             # AI assistant guidelines
+├── CLAUDE.md             # AI assistant guidelines
+└── README.md             # This file
 ```
 
 ### Output Structure
 
-Crawled content is saved to the `crawls/` directory (gitignored) with the following structure:
+All commands save content to the `crawls/` directory (gitignored) with the following structure:
 
 ```
 crawls/
 └── example.com/
-    ├── index.md           # Homepage
-    ├── about.md          # /about page
+    ├── index.md           # Homepage (markdown)
+    ├── index.html         # Homepage (HTML, if requested)
+    ├── index.png          # Homepage (screenshot, if requested)
+    ├── about.md           # /about page
+    ├── sitemap.json       # URL map (from map command)
+    ├── sitemap.txt        # URL list (from map command)
     └── docs/
-        ├── index.md      # /docs/ page
-        └── guide.md      # /docs/guide page
+        ├── index.md       # /docs/ page
+        └── guide.md       # /docs/guide page
 ```
 
 ## Implementation Details
 
 ### URL to File Path Mapping
 
-The crawler converts URLs to file paths following these rules:
+The tool converts URLs to file paths following these rules:
 - `https://example.com/` → `crawls/example.com/index.md`
 - `https://example.com/about` → `crawls/example.com/about.md`
 - `https://example.com/docs/guide` → `crawls/example.com/docs/guide.md`
@@ -115,6 +199,36 @@ The transformer also handles:
 - Query parameters (stripped from internal links)
 - Empty link text and links in parentheses
 
+### Map Output Format
+
+The map command generates two files:
+
+1. **sitemap.json**: Structured JSON with metadata
+```json
+{
+  "source": "https://example.com",
+  "timestamp": "2025-06-04T18:20:00.000Z",
+  "totalUrls": 42,
+  "includeSubdomains": false,
+  "urls": [
+    { "url": "https://example.com/" },
+    { "url": "https://example.com/about" },
+    // ...
+  ]
+}
+```
+
+2. **sitemap.txt**: Simple text list of URLs
+```
+# URL Map for https://example.com
+# Generated: 2025-06-04T18:20:00.000Z
+# Total URLs: 42
+
+https://example.com/
+https://example.com/about
+...
+```
+
 ## Testing
 
 ```bash
@@ -140,8 +254,8 @@ bun typecheck
 # Install dependencies
 bun install
 
-# Run the crawler
-bun run index.ts https://example.com --limit 10
+# Build the executable
+bun run build
 
 # Run tests
 bun test
@@ -150,6 +264,30 @@ bun test
 bun tsc --noEmit
 ```
 
+## Debugging
+
+Enable verbose logging to debug issues:
+
+```bash
+# Using CLI flag
+./fcrawl crawl https://example.com -v
+
+# Using environment variable
+NODE_DEBUG=fcrawl:* ./fcrawl crawl https://example.com
+
+# Debug specific modules
+NODE_DEBUG=fcrawl:crawler ./fcrawl crawl https://example.com
+NODE_DEBUG=fcrawl:cli,fcrawl:storage ./fcrawl scrape https://example.com
+```
+
+Available debug namespaces:
+- `fcrawl:cli` - CLI argument parsing
+- `fcrawl:crawler` - Crawl operations
+- `fcrawl:storage` - File system operations
+- `fcrawl:transform` - Link transformation
+- `fcrawl:main` - Main application flow
+- `fcrawl:error` - Error logging
+
 ## Future Enhancements
 
 - [ ] Resume interrupted crawls
@@ -157,10 +295,16 @@ bun tsc --noEmit
 - [ ] Custom include/exclude patterns
 - [ ] Different output formats (HTML, PDF)
 - [ ] Link validation and broken link reporting
-- [ ] Sitemap generation
 - [ ] Incremental updates (only crawl changed pages)
 - [ ] Progress bar and better logging
 - [ ] Configuration file support
+- [ ] Batch scraping from file input
+- [ ] Export to different formats (EPUB, PDF)
+
+## Version History
+
+- **v1.1.0** - Added scrape and map commands, subcommand support
+- **v1.0.0** - Initial release with crawl functionality
 
 ## License
 

@@ -1,5 +1,7 @@
-import { parseCLIArgs, validateOptions } from "./cli";
+import { parseCLIArgs, validateOptions, CLIOptions, CrawlOptions, ScrapeOptions, MapOptions } from "./cli";
 import { crawl } from "./crawler";
+import { scrape } from "./scraper";
+import { map } from "./mapper";
 import { loggers } from "./logger";
 
 const log = loggers.main;
@@ -21,15 +23,41 @@ async function main() {
   }
   
   try {
-    log("Starting crawl with target: %s", options.targetUrl);
-    await crawl(options.targetUrl!, {
-      apiUrl: options.apiUrl || process.env.FIRECRAWL_API_URL,
-      apiKey: options.apiKey || process.env.FIRECRAWL_API_KEY,
-      limit: options.limit,
-      outputDir: options.outputDir,
-    });
+    // Route to appropriate command
+    switch (options.command) {
+      case "scrape": {
+        const scrapeOpts = options as ScrapeOptions;
+        log("Starting scrape command with %d URLs", scrapeOpts.urls.length);
+        await scrape(scrapeOpts.urls, scrapeOpts);
+        break;
+      }
+      
+      case "crawl": {
+        const crawlOpts = options as CrawlOptions;
+        log("Starting crawl command with target: %s", crawlOpts.targetUrl);
+        await crawl(crawlOpts.targetUrl, {
+          apiUrl: crawlOpts.apiUrl || process.env.FIRECRAWL_API_URL,
+          apiKey: crawlOpts.apiKey || process.env.FIRECRAWL_API_KEY,
+          limit: crawlOpts.limit,
+          outputDir: crawlOpts.outputDir,
+        });
+        break;
+      }
+      
+      case "map": {
+        const mapOpts = options as MapOptions;
+        log("Starting map command with target: %s", mapOpts.targetUrl);
+        await map(mapOpts.targetUrl, mapOpts);
+        break;
+      }
+      
+      default:
+        console.error("Error: Unknown command");
+        process.exit(1);
+    }
+    
   } catch (error) {
-    log("Crawl failed: %o", error);
+    log("Command failed: %o", error);
     process.exit(1);
   }
 }

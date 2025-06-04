@@ -7,8 +7,14 @@ import { loggers } from "./logger";
 
 const log = loggers.storage;
 
-export async function savePage(url: string, content: string, baseUrl: string, outputDir: string = "./crawls"): Promise<void> {
-  const filePath = urlToFilePath(url, baseUrl, outputDir);
+export async function savePage(
+  url: string, 
+  content: string, 
+  baseUrl: string, 
+  outputDir: string = "./crawls",
+  extension: string = ".md"
+): Promise<string> {
+  const filePath = urlToFilePath(url, baseUrl, outputDir, extension);
   const dir = dirname(filePath);
   
   // Create directory if it doesn't exist
@@ -17,12 +23,16 @@ export async function savePage(url: string, content: string, baseUrl: string, ou
     mkdirSync(dir, { recursive: true });
   }
   
-  // Transform links in content
-  log("Transforming links for: %s", url);
-  const transformedContent = transformLinks(content, url, baseUrl);
+  // Transform links in content only for markdown files
+  if (extension === ".md") {
+    log("Transforming links for: %s", url);
+    content = transformLinks(content, url, baseUrl);
+  }
   
   // Write file
-  await writeFile(filePath, transformedContent);
+  await writeFile(filePath, content, extension === ".png" ? "binary" : "utf8");
   log("Saved file: %s", filePath);
   console.log(`Saved: ${filePath}`);
+  
+  return filePath;
 }
