@@ -1,34 +1,29 @@
 import { Text } from "ink";
 import React from "react";
-import { z } from "zod";
 import { crawl } from "../crawler";
 import { loggers } from "../logger";
 import type { CrawlOptions } from "../schemas/cli";
 
 const log = loggers.cli;
 
-export const args = z.tuple([z.string().describe("Starting URL for crawl")]);
-
-export const options = z.object({
-  outputDir: z.string().default("./crawls").describe("Output directory"),
-  limit: z.number().min(1).default(100).describe("Maximum number of pages to crawl"),
-  maxDepth: z.number().optional().describe("Maximum crawl depth"),
-  allowBackwardLinks: z.boolean().default(false).describe("Allow crawling parent directory links"),
-  allowExternalLinks: z.boolean().default(false).describe("Allow crawling external domains"),
-  ignoreSitemap: z.boolean().default(false).describe("Ignore sitemap.xml"),
-  sitemapOnly: z.boolean().default(false).describe("Only crawl URLs from sitemap"),
-  includeSubdomains: z.boolean().default(false).describe("Include URLs from subdomains"),
-  excludePaths: z.array(z.string()).optional().describe("Paths to exclude"),
-  includePaths: z.array(z.string()).optional().describe("Paths to include only"),
-  webhook: z.string().optional().describe("Webhook URL for completion"),
-  verbose: z.boolean().default(false).describe("Enable verbose output"),
-  apiUrl: z.string().optional().describe("Firecrawl API URL"),
-  apiKey: z.string().optional().describe("Firecrawl API key"),
-});
-
 type Props = {
   args: [string];
-  options: z.infer<typeof options>;
+  options: {
+    outputDir: string;
+    limit: number;
+    maxDepth?: number;
+    allowBackwardLinks?: boolean;
+    allowExternalLinks?: boolean;
+    ignoreSitemap?: boolean;
+    sitemapOnly?: boolean;
+    includeSubdomains?: boolean;
+    excludePaths?: string[];
+    includePaths?: string[];
+    webhook?: string;
+    verbose?: boolean;
+    apiUrl?: string;
+    apiKey?: string;
+  };
 };
 
 export default function CrawlCommand({ args: [url], options }: Props) {
@@ -44,24 +39,6 @@ export default function CrawlCommand({ args: [url], options }: Props) {
 
     const runCrawl = async () => {
       try {
-        // Validate API configuration
-        const apiUrl = options.apiUrl || process.env.FIRECRAWL_API_URL;
-        const apiKey = options.apiKey || process.env.FIRECRAWL_API_KEY;
-
-        if (!apiUrl && !apiKey) {
-          throw new Error(
-            `Firecrawl API configuration missing
-
-You must provide either:
-1. A self-hosted Firecrawl URL: --api-url http://localhost:3002
-2. A Firecrawl API key: --api-key fc-YOUR_KEY
-
-Or set environment variables:
-  export FIRECRAWL_API_URL=http://localhost:3002
-  export FIRECRAWL_API_KEY=fc-YOUR_KEY`,
-          );
-        }
-
         if (!url) {
           throw new Error("No URL provided");
         }
@@ -76,6 +53,7 @@ Or set environment variables:
           command: "crawl",
           url,
           ...options,
+          verbose: options.verbose ?? false,
           help: false,
           version: false,
         };

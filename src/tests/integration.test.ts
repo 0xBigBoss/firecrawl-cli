@@ -42,11 +42,13 @@ describe("fcrawl executable integration tests", () => {
     expect(result).toContain("1.1.0");
   });
 
-  test("should show error when no URL provided", async () => {
-    // With Commander, running without args shows help, not an error
-    const result = await $`./bin/fcrawl`.text();
-    expect(result).toContain("Usage: fcrawl");
-    expect(result).toContain("Commands:");
+  test("should show help when no URL provided", async () => {
+    // With Commander, running without args shows help
+    const result = await $`./bin/fcrawl`.nothrow();
+    const output = result.stdout.toString();
+    expect(result.exitCode).toBe(1);
+    expect(output).toContain("Usage: fcrawl");
+    expect(output).toContain("Commands:");
   });
 
   test("should show error when no API config provided", async () => {

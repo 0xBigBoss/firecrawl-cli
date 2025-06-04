@@ -6,7 +6,7 @@ import { $ } from "bun";
 
 describe("subcommand integration tests", () => {
   const testOutputDir = "./test-crawls";
-  const fcrawlPath = "./fcrawl";
+  const fcrawlPath = "./bin/fcrawl";
 
   beforeAll(async () => {
     // Build the executable

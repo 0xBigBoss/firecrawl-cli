@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
 import * as fs from "node:fs/promises";
-import type { MapOptions } from "../cli";
+import type { MapOptions } from "../schemas/cli";
 import { map } from "../mapper";
 
 // Mock the fs module

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-import type { ScrapeOptions } from "../cli";
+import type { ScrapeOptions } from "../schemas/cli";
 import { scrape } from "../scraper";
 import * as storage from "../storage";
 
@@ -17,7 +17,7 @@ mock.module("@mendable/firecrawl-js", () => ({
         throw new Error("Network error");
       }
 
-      const baseResponse = {
+      const response: any = {
         success: true,
         metadata: {
           url,
@@ -25,8 +25,6 @@ mock.module("@mendable/firecrawl-js", () => ({
           description: "Test description",
         },
       };
-
-      const response = { ...baseResponse };
 
       // Add format-specific data based on options
       if (!options?.formats || options.formats.includes("markdown")) {

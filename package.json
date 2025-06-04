@@ -31,8 +31,8 @@
   "dependencies": {
     "@mendable/firecrawl-js": "^1.25.3",
     "@types/react": "^19.1.6",
+    "commander": "^14.0.0",
     "ink": "^6.0.0",
-    "pastel": "^3.0.0",
     "react": "^19.1.0",
     "react-devtools-core": "^6.1.2",
     "zod": "^3.25.51"

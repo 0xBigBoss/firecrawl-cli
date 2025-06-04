@@ -1,6 +1,6 @@
 import FirecrawlApp from "@mendable/firecrawl-js";
-import type { ScrapeOptions } from "./schemas/cli";
 import { loggers } from "./logger";
+import type { ScrapeOptions } from "./schemas/cli";
 import { savePage } from "./storage";
 
 const log = loggers.crawler;
@@ -79,6 +79,7 @@ export async function scrape(urls: string[], options: ScrapeOptions): Promise<vo
   // Scrape each URL
   for (let i = 0; i < urls.length; i++) {
     const url = urls[i];
+    if (!url) continue; // Skip undefined URLs
 
     try {
       log("Scraping URL %d/%d: %s", i + 1, urls.length, url);

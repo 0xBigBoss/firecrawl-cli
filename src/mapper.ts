@@ -1,8 +1,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import FirecrawlApp from "@mendable/firecrawl-js";
-import type { MapOptions } from "./schemas/cli";
 import { loggers } from "./logger";
+import type { MapOptions } from "./schemas/cli";
 
 const log = loggers.crawler;
 
