@@ -108,7 +108,8 @@ describe("mapper", () => {
       // Check that console output includes the discovered URLs
       const consoleCalls = consoleLogSpy.mock.calls.map((call) => call[0]);
       const consoleOutput = consoleCalls.join("\n");
-      expect(consoleOutput).toContain("Discovered URLs:");
+      // In non-verbose mode, it should show count and URLs but not the "Discovered URLs:" header
+      expect(consoleOutput).toContain("Found 4 URLs");
       expect(consoleOutput).toContain("https://example.com/");
     });
 

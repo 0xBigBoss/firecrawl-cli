@@ -2,6 +2,7 @@ import { createFirecrawlApp } from "./libs/firecrawl-client";
 import { loggers } from "./logger";
 import type { CrawlOptions } from "./schemas/cli";
 import { savePage } from "./storage";
+import { isVerboseEnabled } from "./verbose-logger";
 
 const log = loggers.crawler;
 
@@ -10,8 +11,10 @@ export type CrawlerOptions = CrawlOptions;
 export async function crawl(url: string, options: CrawlerOptions): Promise<void> {
   log("Starting crawl of: %s", url);
   log("Options: %o", options);
-  console.log(`Starting crawl of: ${url}`);
-  console.log(`Limit: ${options.limit} pages`);
+  if (isVerboseEnabled()) {
+    console.log(`Starting crawl of: ${url}`);
+    console.log(`Limit: ${options.limit} pages`);
+  }
 
   // Initialize Firecrawl
   log("Initializing Firecrawl app", options);
@@ -102,7 +105,9 @@ export async function crawl(url: string, options: CrawlerOptions): Promise<void>
 
     const results = crawlResponse.data;
     log("Crawl response received, pages: %d", results.length);
-    console.log(`Crawled ${results.length} pages`);
+    if (isVerboseEnabled()) {
+      console.log(`Crawled ${results.length} pages`);
+    }
 
     // Save each page
     let savedCount = 0;
@@ -112,15 +117,24 @@ export async function crawl(url: string, options: CrawlerOptions): Promise<void>
         log("Saving page: %s", pageUrl);
         await savePage(pageUrl, page.markdown, url, options.outputDir);
         savedCount++;
-        console.log(`Progress: ${savedCount}/${results.length} pages saved`);
+        if (isVerboseEnabled()) {
+          console.log(`Progress: ${savedCount}/${results.length} pages saved`);
+        }
       } else {
         log("Skipping page: missing %s", !pageUrl ? "URL" : "markdown content");
-        console.warn(`Skipping page: missing ${!pageUrl ? "URL" : "markdown content"}`);
+        if (isVerboseEnabled()) {
+          console.warn(`Skipping page: missing ${!pageUrl ? "URL" : "markdown content"}`);
+        }
       }
     }
 
-    console.log("\nCrawl completed successfully!");
-    console.log(`Total pages saved: ${savedCount}`);
+    // Always show final results
+    if (isVerboseEnabled()) {
+      console.log("\nCrawl completed successfully!");
+      console.log(`Total pages saved: ${savedCount}`);
+    } else {
+      console.log(`Crawled ${savedCount} pages`);
+    }
   } catch (error) {
     loggers.error("Crawl failed: %o", error);
     console.error("Crawl failed:", error);

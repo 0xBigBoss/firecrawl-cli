@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { createFirecrawlApp } from "./libs/firecrawl-client";
 import { loggers } from "./logger";
 import type { MapOptions } from "./schemas/cli";
+import { isVerboseEnabled } from "./verbose-logger";
 
 const log = loggers.crawler;
 
@@ -18,9 +19,11 @@ export async function map(url: string, options: MapOptions): Promise<void> {
   log("Starting URL mapping of: %s", url);
   log("Options: %o", options);
 
-  console.log(`Starting URL discovery for: ${url}`);
-  if (options.limit) {
-    console.log(`Limit: ${options.limit} URLs`);
+  if (isVerboseEnabled()) {
+    console.log(`Starting URL discovery for: ${url}`);
+    if (options.limit) {
+      console.log(`Limit: ${options.limit} URLs`);
+    }
   }
 
   // Initialize Firecrawl
@@ -59,7 +62,9 @@ export async function map(url: string, options: MapOptions): Promise<void> {
 
   try {
     log("Starting map with options: %o", mapOptions);
-    console.log("Discovering URLs...");
+    if (isVerboseEnabled()) {
+      console.log("Discovering URLs...");
+    }
 
     const result = await app.mapUrl(url, {
       ...mapOptions,
@@ -71,14 +76,22 @@ export async function map(url: string, options: MapOptions): Promise<void> {
 
     const urls = result.links || [];
     log("Map completed, found %d URLs", urls.length);
-    console.log(`\nDiscovered ${urls.length} URLs`);
+
+    // Always show the count, but format differently based on verbose mode
+    if (isVerboseEnabled()) {
+      console.log(`\nDiscovered ${urls.length} URLs`);
+    } else {
+      console.log(`Found ${urls.length} URLs`);
+    }
 
     // Process results based on output option
     const shouldPrintToConsole = options.output === "console" || options.output === "both";
     const shouldSaveToFile = options.output === "file" || options.output === "both";
 
     if (shouldPrintToConsole) {
-      console.log("\nDiscovered URLs:");
+      if (isVerboseEnabled()) {
+        console.log("\nDiscovered URLs:");
+      }
       urls.forEach((item: any, index: number) => {
         // Handle both string URLs and object formats
         const urlStr = typeof item === "string" ? item : item.url;
@@ -112,7 +125,9 @@ export async function map(url: string, options: MapOptions): Promise<void> {
       // Save as JSON
       const jsonPath = join(outputPath, "sitemap.json");
       await writeFile(jsonPath, JSON.stringify(mapData, null, 2));
-      console.log(`\nSaved URL map to: ${jsonPath}`);
+      if (isVerboseEnabled()) {
+        console.log(`\nSaved URL map to: ${jsonPath}`);
+      }
 
       // Also save as simple text file for easy reading
       const txtPath = join(outputPath, "sitemap.txt");
@@ -124,10 +139,16 @@ export async function map(url: string, options: MapOptions): Promise<void> {
         txtPath,
         `# URL Map for ${url}\n# Generated: ${mapData.timestamp}\n# Total URLs: ${urls.length}\n\n${urlList}`,
       );
-      console.log(`Saved URL list to: ${txtPath}`);
+      if (isVerboseEnabled()) {
+        console.log(`Saved URL list to: ${txtPath}`);
+      } else {
+        console.log(`Saved to: ${txtPath}`);
+      }
     }
 
-    console.log("\nMap completed successfully!");
+    if (isVerboseEnabled()) {
+      console.log("\nMap completed successfully!");
+    }
   } catch (error) {
     loggers.error("Map failed: %o", error);
     console.error("Map failed:", error);

@@ -38,7 +38,9 @@ export default function ScrapeCommand({ args: [urls], options }: Props) {
           throw new Error("No URLs provided");
         }
 
-        setStatus(`Scraping ${urls.length} URL(s)...`);
+        if (options.verbose) {
+          setStatus(`Scraping ${urls.length} URL(s)...`);
+        }
 
         const scrapeOptions: ScrapeOptions = {
           command: "scrape",
@@ -50,7 +52,11 @@ export default function ScrapeCommand({ args: [urls], options }: Props) {
         };
 
         await scrape(urls, scrapeOptions);
-        setStatus(`Successfully scraped ${urls.length} URL(s)`);
+        if (options.verbose) {
+          setStatus(`Successfully scraped ${urls.length} URL(s)`);
+        } else {
+          setStatus(""); // Hide status in non-verbose mode
+        }
         app.exit();
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -66,5 +72,5 @@ export default function ScrapeCommand({ args: [urls], options }: Props) {
     return <Text color="red">Error: {error}</Text>;
   }
 
-  return <Text color="green">{status}</Text>;
+  return status ? <Text color="green">{status}</Text> : null;
 }

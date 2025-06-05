@@ -37,7 +37,9 @@ export default function MapCommand({ args: [url], options }: Props) {
           throw new Error("Limit must be a positive number");
         }
 
-        setStatus(`Mapping ${url}...`);
+        if (options.verbose) {
+          setStatus(`Mapping ${url}...`);
+        }
 
         const mapOptions: MapOptions = {
           command: "map",
@@ -49,7 +51,11 @@ export default function MapCommand({ args: [url], options }: Props) {
         };
 
         await map(url, mapOptions);
-        setStatus(`Successfully mapped ${url}`);
+        if (options.verbose) {
+          setStatus(`Successfully mapped ${url}`);
+        } else {
+          setStatus(""); // Hide status in non-verbose mode
+        }
         app.exit();
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -65,5 +71,5 @@ export default function MapCommand({ args: [url], options }: Props) {
     return <Text color="red">Error: {error}</Text>;
   }
 
-  return <Text color="green">{status}</Text>;
+  return status ? <Text color="green">{status}</Text> : null;
 }

@@ -4,6 +4,7 @@ import { dirname } from "node:path";
 import { loggers } from "./logger";
 import { transformLinks } from "./transform";
 import { urlToFilePath } from "./utils/url";
+import { isVerboseEnabled } from "./verbose-logger";
 
 const log = loggers.storage;
 
@@ -33,7 +34,11 @@ export async function savePage(
   // Write file
   await writeFile(filePath, transformedContent, extension === ".png" ? "binary" : "utf8");
   log("Saved file: %s", filePath);
-  console.log(`Saved: ${filePath}`);
+
+  // Only show save output in verbose mode
+  if (isVerboseEnabled()) {
+    console.log(`Saved: ${filePath}`);
+  }
 
   return filePath;
 }

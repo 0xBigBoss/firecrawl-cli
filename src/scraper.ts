@@ -2,6 +2,7 @@ import { createFirecrawlApp } from "./libs/firecrawl-client";
 import { loggers } from "./logger";
 import type { ScrapeOptions } from "./schemas/cli";
 import { savePage } from "./storage";
+import { isVerboseEnabled } from "./verbose-logger";
 
 const log = loggers.crawler;
 
@@ -15,7 +16,9 @@ export async function scrape(urls: string[], options: ScrapeOptions): Promise<vo
   log("Starting scrape of %d URLs", urls.length);
   log("Options: %o", options);
 
-  console.log(`Starting scrape of ${urls.length} URL${urls.length > 1 ? "s" : ""}...`);
+  if (isVerboseEnabled()) {
+    console.log(`Starting scrape of ${urls.length} URL${urls.length > 1 ? "s" : ""}...`);
+  }
 
   // Initialize Firecrawl
   log("Initializing Firecrawl app");
@@ -85,7 +88,9 @@ export async function scrape(urls: string[], options: ScrapeOptions): Promise<vo
 
     try {
       log("Scraping URL %d/%d: %s", i + 1, urls.length, url);
-      console.log(`\n[${i + 1}/${urls.length}] Scraping: ${url}`);
+      if (isVerboseEnabled()) {
+        console.log(`\n[${i + 1}/${urls.length}] Scraping: ${url}`);
+      }
 
       const result = await app.scrapeUrl(url, scrapeOptions);
       log("Scrape result: %o", result);
@@ -100,26 +105,34 @@ export async function scrape(urls: string[], options: ScrapeOptions): Promise<vo
       // Save markdown content
       if (data.markdown) {
         await savePage(url, data.markdown, url, options.outputDir, ".md");
-        console.log(`✓ Saved markdown: ${url}`);
+        if (isVerboseEnabled()) {
+          console.log(`✓ Saved markdown: ${url}`);
+        }
       }
 
       // Save HTML content if requested
       if (data.html && options.formats?.includes("html")) {
         await savePage(url, data.html, url, options.outputDir, ".html");
-        console.log(`✓ Saved HTML: ${url}`);
+        if (isVerboseEnabled()) {
+          console.log(`✓ Saved HTML: ${url}`);
+        }
       }
 
       // Save raw HTML if requested
       if (data.rawHtml && options.formats?.includes("rawHtml")) {
         await savePage(url, data.rawHtml, url, options.outputDir, ".raw.html");
-        console.log(`✓ Saved raw HTML: ${url}`);
+        if (isVerboseEnabled()) {
+          console.log(`✓ Saved raw HTML: ${url}`);
+        }
       }
 
       // Save links if requested
       if (data.links && options.formats?.includes("links")) {
         const linksContent = JSON.stringify(data.links, null, 2);
         await savePage(url, linksContent, url, options.outputDir, ".links.json");
-        console.log(`✓ Saved links: ${url}`);
+        if (isVerboseEnabled()) {
+          console.log(`✓ Saved links: ${url}`);
+        }
       }
 
       // Save screenshot if available
@@ -129,21 +142,31 @@ export async function scrape(urls: string[], options: ScrapeOptions): Promise<vo
         const buffer = Buffer.from(screenshotData, "base64");
 
         await savePage(url, buffer.toString("binary"), url, options.outputDir, ".png");
-        console.log(`✓ Saved screenshot: ${url}`);
+        if (isVerboseEnabled()) {
+          console.log(`✓ Saved screenshot: ${url}`);
+        }
       }
 
       successCount++;
     } catch (error) {
       errorCount++;
       loggers.error("Failed to scrape %s: %o", url, error);
-      console.error(`✗ Failed to scrape ${url}: ${error}`);
+      if (isVerboseEnabled()) {
+        console.error(`✗ Failed to scrape ${url}: ${error}`);
+      }
     }
   }
 
-  // Summary
-  console.log("\nScrape completed!");
-  console.log(`Success: ${successCount}/${urls.length}`);
-  if (errorCount > 0) {
-    console.log(`Errors: ${errorCount}`);
+  // Summary - always show in non-verbose mode for final results
+  if (!isVerboseEnabled()) {
+    console.log(
+      `Scraped ${successCount}/${urls.length} URLs${errorCount > 0 ? ` (${errorCount} errors)` : ""}`,
+    );
+  } else {
+    console.log("\nScrape completed!");
+    console.log(`Success: ${successCount}/${urls.length}`);
+    if (errorCount > 0) {
+      console.log(`Errors: ${errorCount}`);
+    }
   }
 }
