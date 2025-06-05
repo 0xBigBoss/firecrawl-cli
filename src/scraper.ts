@@ -99,7 +99,7 @@ export async function scrape(urls: string[], options: ScrapeOptions): Promise<vo
 
       // Save markdown content
       if (data.markdown) {
-        await savePage(url, data.markdown, url, options.outputDir);
+        await savePage(url, data.markdown, url, options.outputDir, ".md");
         console.log(`✓ Saved markdown: ${url}`);
       }
 

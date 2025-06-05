@@ -18,8 +18,14 @@ export function createCLI(): Command {
     .version(VERSION)
     .description("Web crawler and scraper using Firecrawl API")
     .option("-v, --verbose", "Enable verbose output", false)
-    .option("--api-url <url>", "Firecrawl API URL (overrides FIRECRAWL_API_URL env var)")
-    .option("--api-key <key>", "Firecrawl API key (overrides FIRECRAWL_API_KEY env var)")
+    .option(
+      "--api-url <url>",
+      "Firecrawl API URL (overrides FIRECRAWL_API_URL env var)"
+    )
+    .option(
+      "--api-key <key>",
+      "Firecrawl API key (overrides FIRECRAWL_API_KEY env var)"
+    )
     .hook("preAction", (thisCommand) => {
       const options = thisCommand.opts();
       if (options.verbose && !process.env.NODE_DEBUG) {
@@ -34,18 +40,25 @@ export function createCLI(): Command {
     .description("Scrape one or more URLs")
     .argument("<urls...>", "URLs to scrape")
     .option("-o, --output-dir <dir>", "Output directory", "./crawls")
-    .option("--formats <formats...>", "Content formats (markdown,html,screenshot,rawHtml,links)")
-    .option("--screenshot", "Include screenshot", false)
-    .option("--wait-for <ms>", "Wait time in ms for dynamic content", Number.parseInt)
-    .option("--only-main-content", "Only return main content", true)
+    .option(
+      "--formats <formats...>",
+      "Content formats (markdown,html,screenshot,rawHtml,links)"
+    )
+    .option("--screenshot", "Include screenshot")
+    .option(
+      "--wait-for <ms>",
+      "Wait time in ms for dynamic content",
+      Number.parseInt
+    )
+    .option("--no-only-main-content", "Include all content, not just main")
     .option("--include-tags <tags...>", "HTML tags to include")
     .option("--exclude-tags <tags...>", "HTML tags to exclude")
     .option("--headers <json>", "Custom headers as JSON")
-    .option("--mobile", "Use mobile viewport", false)
-    .option("--skip-tls-verification", "Skip TLS certificate verification", false)
+    .option("--mobile", "Use mobile viewport")
+    .option("--skip-tls-verification", "Skip TLS certificate verification")
     .option("--timeout <ms>", "Request timeout in ms", Number.parseInt)
-    .option("--parse-pdf", "Parse PDF files", true)
-    .option("--remove-base64-images", "Remove base64 images", false)
+    .option("--no-parse-pdf", "Don't parse PDF files")
+    .option("--remove-base64-images", "Remove base64 images")
     .action(async (urls: string[], options) => {
       const globalOptions = program.opts();
 
@@ -75,23 +88,33 @@ export function createCLI(): Command {
       "-l, --limit <number>",
       "Maximum number of pages to crawl",
       (val) => Number.parseInt(val),
-      100,
+      100
     )
     .option("--max-depth <number>", "Maximum crawl depth", Number.parseInt)
-    .option("--allow-backward-links", "Allow crawling parent directory links", false)
-    .option("--allow-external-links", "Allow crawling external domains", false)
-    .option("--ignore-sitemap", "Ignore sitemap.xml", false)
-    .option("--sitemap-only", "Only crawl URLs from sitemap", false)
-    .option("--include-subdomains", "Include URLs from subdomains", false)
+    .option("--allow-backward-links", "Allow crawling parent directory links")
+    .option("--allow-external-links", "Allow crawling external domains")
+    .option("--ignore-sitemap", "Ignore sitemap.xml")
+    .option("--sitemap-only", "Only crawl URLs from sitemap")
+    .option("--include-subdomains", "Include URLs from subdomains")
     .option("--exclude-paths <paths...>", "Paths to exclude")
     .option("--include-paths <paths...>", "Paths to include only")
     .option("--webhook <url>", "Webhook URL for completion")
-    .option("--ignore-robots-txt", "Ignore robots.txt restrictions", false)
-    .option("--deduplicate-similar-urls", "Remove similar URLs during crawl", true)
-    .option("--ignore-query-parameters", "Ignore query parameters when comparing URLs", false)
-    .option("--regex-on-full-url", "Apply include/exclude regex patterns on full URL", false)
+    .option("--ignore-robots-txt", "Ignore robots.txt restrictions")
+    .option("--no-deduplicate-similar-urls", "Don't deduplicate similar URLs")
+    .option(
+      "--ignore-query-parameters",
+      "Ignore query parameters when comparing URLs"
+    )
+    .option(
+      "--regex-on-full-url",
+      "Apply include/exclude regex patterns on full URL"
+    )
     .option("--delay <ms>", "Delay between requests in ms", Number.parseInt)
-    .option("--max-discovery-depth <number>", "Maximum depth for URL discovery", Number.parseInt)
+    .option(
+      "--max-discovery-depth <number>",
+      "Maximum depth for URL discovery",
+      Number.parseInt
+    )
     .action(async (url: string, options) => {
       const globalOptions = program.opts();
 
@@ -105,10 +128,10 @@ export function createCLI(): Command {
           ...globalOptions,
           excludePaths: options.excludePaths,
           includePaths: options.includePaths,
-          ignoreRobotsTxt: options.ignoreRobotsTxt,
-          deduplicateSimilarUrls: options.deduplicateSimilarUrls,
-          ignoreQueryParameters: options.ignoreQueryParameters,
-          regexOnFullUrl: options.regexOnFullUrl,
+          ignoreRobotsTxt: options.ignoreRobotsTxt || false,
+          deduplicateSimilarUrls: options.deduplicateSimilarUrls !== false,
+          ignoreQueryParameters: options.ignoreQueryParameters || false,
+          regexOnFullUrl: options.regexOnFullUrl || false,
           maxDiscoveryDepth: options.maxDiscoveryDepth,
         },
       });
@@ -120,7 +143,11 @@ export function createCLI(): Command {
     .description("Discover all URLs on a website")
     .argument("<url>", "URL to map")
     .option("-o, --output-dir <dir>", "Output directory", "./crawls")
-    .option("-l, --limit <number>", "Maximum number of URLs to discover", Number.parseInt)
+    .option(
+      "-l, --limit <number>",
+      "Maximum number of URLs to discover",
+      Number.parseInt
+    )
     .option("--include-subdomains", "Include URLs from subdomains", false)
     .option("--output <type>", "Output type: console, file, both", "file")
     .option("--search <query>", "Search query to filter URLs")
@@ -150,23 +177,33 @@ export function createCLI(): Command {
       "-l, --limit <number>",
       "Maximum number of pages to crawl",
       (val) => Number.parseInt(val),
-      100,
+      100
     )
     .option("--max-depth <number>", "Maximum crawl depth", Number.parseInt)
-    .option("--allow-backward-links", "Allow crawling parent directory links", false)
-    .option("--allow-external-links", "Allow crawling external domains", false)
-    .option("--ignore-sitemap", "Ignore sitemap.xml", false)
-    .option("--sitemap-only", "Only crawl URLs from sitemap", false)
-    .option("--include-subdomains", "Include URLs from subdomains", false)
+    .option("--allow-backward-links", "Allow crawling parent directory links")
+    .option("--allow-external-links", "Allow crawling external domains")
+    .option("--ignore-sitemap", "Ignore sitemap.xml")
+    .option("--sitemap-only", "Only crawl URLs from sitemap")
+    .option("--include-subdomains", "Include URLs from subdomains")
     .option("--exclude-paths <paths...>", "Paths to exclude")
     .option("--include-paths <paths...>", "Paths to include only")
     .option("--webhook <url>", "Webhook URL for completion")
-    .option("--ignore-robots-txt", "Ignore robots.txt restrictions", false)
-    .option("--deduplicate-similar-urls", "Remove similar URLs during crawl", true)
-    .option("--ignore-query-parameters", "Ignore query parameters when comparing URLs", false)
-    .option("--regex-on-full-url", "Apply include/exclude regex patterns on full URL", false)
+    .option("--ignore-robots-txt", "Ignore robots.txt restrictions")
+    .option("--no-deduplicate-similar-urls", "Don't deduplicate similar URLs")
+    .option(
+      "--ignore-query-parameters",
+      "Ignore query parameters when comparing URLs"
+    )
+    .option(
+      "--regex-on-full-url",
+      "Apply include/exclude regex patterns on full URL"
+    )
     .option("--delay <ms>", "Delay between requests in ms", Number.parseInt)
-    .option("--max-discovery-depth <number>", "Maximum depth for URL discovery", Number.parseInt)
+    .option(
+      "--max-discovery-depth <number>",
+      "Maximum depth for URL discovery",
+      Number.parseInt
+    )
     .action(async (url: string | undefined, options) => {
       const globalOptions = program.opts();
 
@@ -186,10 +223,10 @@ export function createCLI(): Command {
           ...globalOptions,
           excludePaths: options.excludePaths,
           includePaths: options.includePaths,
-          ignoreRobotsTxt: options.ignoreRobotsTxt,
-          deduplicateSimilarUrls: options.deduplicateSimilarUrls,
-          ignoreQueryParameters: options.ignoreQueryParameters,
-          regexOnFullUrl: options.regexOnFullUrl,
+          ignoreRobotsTxt: options.ignoreRobotsTxt || false,
+          deduplicateSimilarUrls: options.deduplicateSimilarUrls !== false,
+          ignoreQueryParameters: options.ignoreQueryParameters || false,
+          regexOnFullUrl: options.regexOnFullUrl || false,
           maxDiscoveryDepth: options.maxDiscoveryDepth,
         },
       });

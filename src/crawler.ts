@@ -8,7 +8,10 @@ import type { CrawlOptions } from "./schemas/cli";
 
 export type CrawlerOptions = CrawlOptions;
 
-export async function crawl(url: string, options: CrawlerOptions): Promise<void> {
+export async function crawl(
+  url: string,
+  options: CrawlerOptions
+): Promise<void> {
   log("Starting crawl of: %s", url);
   log("Options: %o", options);
   console.log(`Starting crawl of: ${url}`);
@@ -107,7 +110,8 @@ export async function crawl(url: string, options: CrawlerOptions): Promise<void>
     // Save each page
     let savedCount = 0;
     for (const page of results) {
-      const pageUrl = page.metadata?.url || page.metadata?.sourceURL || page.url;
+      const pageUrl =
+        page.metadata?.url || page.metadata?.sourceURL || page.url;
       if (page.markdown && pageUrl) {
         log("Saving page: %s", pageUrl);
         await savePage(pageUrl, page.markdown, url, options.outputDir);
@@ -115,7 +119,9 @@ export async function crawl(url: string, options: CrawlerOptions): Promise<void>
         console.log(`Progress: ${savedCount}/${results.length} pages saved`);
       } else {
         log("Skipping page: missing %s", !pageUrl ? "URL" : "markdown content");
-        console.warn(`Skipping page: missing ${!pageUrl ? "URL" : "markdown content"}`);
+        console.warn(
+          `Skipping page: missing ${!pageUrl ? "URL" : "markdown content"}`
+        );
       }
     }
 
