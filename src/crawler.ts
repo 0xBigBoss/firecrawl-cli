@@ -1,10 +1,9 @@
-import FirecrawlApp from "@mendable/firecrawl-js";
+import { createFirecrawlApp } from "./libs/firecrawl-client";
 import { loggers } from "./logger";
+import type { CrawlOptions } from "./schemas/cli";
 import { savePage } from "./storage";
 
 const log = loggers.crawler;
-
-import type { CrawlOptions } from "./schemas/cli";
 
 export type CrawlerOptions = CrawlOptions;
 
@@ -16,7 +15,7 @@ export async function crawl(url: string, options: CrawlerOptions): Promise<void>
 
   // Initialize Firecrawl
   log("Initializing Firecrawl app", options);
-  const app = new FirecrawlApp({
+  const app = createFirecrawlApp({
     apiUrl: options.apiUrl,
     apiKey: options.apiKey,
   });

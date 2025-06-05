@@ -72,7 +72,7 @@ describe("scraper", () => {
         "# Test Page\n\nContent for https://example.com",
         "https://example.com",
         "./test-output",
-        ".md"
+        ".md",
       );
     });
 
@@ -96,14 +96,14 @@ describe("scraper", () => {
         expect.stringContaining("page1"),
         "https://example.com/page1",
         "./test-output",
-        ".md"
+        ".md",
       );
       expect(mockSavePage).toHaveBeenCalledWith(
         "https://example.com/page2",
         expect.stringContaining("page2"),
         "https://example.com/page2",
         "./test-output",
-        ".md"
+        ".md",
       );
     });
 
@@ -127,14 +127,14 @@ describe("scraper", () => {
         expect.stringContaining("# Test Page"),
         "https://example.com",
         "./test-output",
-        ".md"
+        ".md",
       );
       expect(mockSavePage).toHaveBeenCalledWith(
         "https://example.com",
         expect.stringContaining("<h1>Test Page</h1>"),
         "https://example.com",
         "./test-output",
-        ".html"
+        ".html",
       );
     });
 
@@ -158,7 +158,7 @@ describe("scraper", () => {
         expect.any(String), // The decoded base64 data
         "https://example.com",
         "./test-output",
-        ".png"
+        ".png",
       );
     });
   });
@@ -200,7 +200,7 @@ describe("scraper", () => {
         expect.stringContaining("# Test Page"),
         "https://example.com",
         "./test-output",
-        ".md"
+        ".md",
       );
     });
 
@@ -242,7 +242,7 @@ describe("scraper", () => {
         expect.any(String),
         "https://example.com",
         "./test-output",
-        ".md"
+        ".md",
       );
     });
   });

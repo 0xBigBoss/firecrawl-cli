@@ -108,9 +108,7 @@ Bare: ../../docs.md
       const content = "[Bad URL](not-a-valid-url://) and [Good](/about)";
       const currentUrl = "https://example.com/docs/guide";
       const result = transformLinks(content, currentUrl, baseUrl);
-      expect(result).toBe(
-        "[Bad URL](not-a-valid-url://) and [Good](../about.md)"
-      );
+      expect(result).toBe("[Bad URL](not-a-valid-url://) and [Good](../about.md)");
     });
   });
 

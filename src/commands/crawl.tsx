@@ -4,7 +4,7 @@ import { crawl } from "../crawler";
 import { loggers } from "../logger";
 import type { CrawlOptions } from "../schemas/cli";
 
-const log = loggers.cli;
+const _log = loggers.cli;
 
 type Props = {
   args: [string];
@@ -39,11 +39,6 @@ export default function CrawlCommand({ args: [url], options }: Props) {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: CLI runs once and exits
   React.useEffect(() => {
-    if (options.verbose && !process.env.NODE_DEBUG) {
-      process.env.NODE_DEBUG = "fcrawl:*";
-      log("Enabled verbose logging");
-    }
-
     const runCrawl = async () => {
       try {
         if (!url) {
@@ -67,6 +62,7 @@ export default function CrawlCommand({ args: [url], options }: Props) {
 
         await crawl(url, crawlOptions);
         setStatus(`Successfully crawled ${url}`);
+        app.exit(); // Exit successfully
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         setError(msg);

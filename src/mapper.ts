@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import FirecrawlApp from "@mendable/firecrawl-js";
+import { createFirecrawlApp } from "./libs/firecrawl-client";
 import { loggers } from "./logger";
 import type { MapOptions } from "./schemas/cli";
 
@@ -25,9 +25,9 @@ export async function map(url: string, options: MapOptions): Promise<void> {
 
   // Initialize Firecrawl
   log("Initializing Firecrawl app");
-  const app = new FirecrawlApp({
-    apiUrl: options.apiUrl || process.env.FIRECRAWL_API_URL,
-    apiKey: options.apiKey || process.env.FIRECRAWL_API_KEY,
+  const app = createFirecrawlApp({
+    apiUrl: options.apiUrl,
+    apiKey: options.apiKey,
   });
 
   // Build map options

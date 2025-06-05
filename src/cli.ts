@@ -1,4 +1,14 @@
 import { Command } from "commander";
+import {
+  addCrawlOptions,
+  addGlobalOptions,
+  addLimitOption,
+  addOutputOption,
+  addScrapeOptions,
+  createBaseAction,
+  transformCrawlOptions,
+  transformScrapeOptions,
+} from "./cli-utils";
 import CrawlCommand from "./commands/crawl";
 import DefaultCommand from "./commands/index";
 import MapCommand from "./commands/map";
@@ -6,6 +16,7 @@ import ScrapeCommand from "./commands/scrape";
 import { validateApiConfig } from "./commands/validate";
 import { loggers } from "./logger";
 import { renderComponent } from "./render";
+import { enableVerbose } from "./verbose-logger";
 
 const log = loggers.cli;
 const VERSION = "1.1.0";
@@ -13,187 +24,86 @@ const VERSION = "1.1.0";
 export function createCLI(): Command {
   const program = new Command();
 
-  program
+  // Apply global options
+  addGlobalOptions(program)
     .name("fcrawl")
     .version(VERSION)
     .description("Web crawler and scraper using Firecrawl API")
-    .option("-v, --verbose", "Enable verbose output", false)
-    .option("--api-url <url>", "Firecrawl API URL (overrides FIRECRAWL_API_URL env var)")
-    .option("--api-key <key>", "Firecrawl API key (overrides FIRECRAWL_API_KEY env var)")
     .hook("preAction", (thisCommand) => {
       const options = thisCommand.opts();
-      if (options.verbose && !process.env.NODE_DEBUG) {
-        process.env.NODE_DEBUG = "fcrawl:*";
+      if (options.verbose) {
+        enableVerbose();
         log("Enabled verbose logging");
       }
     });
 
   // Scrape command
-  program
+  const scrapeCommand = program
     .command("scrape")
     .description("Scrape one or more URLs")
-    .argument("<urls...>", "URLs to scrape")
-    .option("-o, --output-dir <dir>", "Output directory", "./crawls")
-    .option("--formats <formats...>", "Content formats (markdown,html,screenshot,rawHtml,links)")
-    .option("--screenshot", "Include screenshot")
-    .option("--wait-for <ms>", "Wait time in ms for dynamic content", Number.parseInt)
-    .option("--no-only-main-content", "Include all content, not just main")
-    .option("--include-tags <tags...>", "HTML tags to include")
-    .option("--exclude-tags <tags...>", "HTML tags to exclude")
-    .option("--headers <json>", "Custom headers as JSON")
-    .option("--mobile", "Use mobile viewport")
-    .option("--skip-tls-verification", "Skip TLS certificate verification")
-    .option("--timeout <ms>", "Request timeout in ms", Number.parseInt)
-    .option("--no-parse-pdf", "Don't parse PDF files")
-    .option("--remove-base64-images", "Remove base64 images")
-    .action(async (urls: string[], options) => {
-      const globalOptions = program.opts();
+    .argument("<urls...>", "URLs to scrape");
 
-      // Validate before rendering
-      validateApiConfig({ ...options, ...globalOptions });
+  addOutputOption(scrapeCommand);
+  addScrapeOptions(scrapeCommand);
 
-      await renderComponent(ScrapeCommand, {
-        args: [urls],
-        options: {
-          ...options,
-          ...globalOptions,
-          formats: options.formats,
-          includeTags: options.includeTags,
-          excludeTags: options.excludeTags,
-          headers: options.headers ? JSON.parse(options.headers) : undefined,
-        },
-      });
-    });
+  scrapeCommand.action(createBaseAction(ScrapeCommand, transformScrapeOptions));
 
   // Crawl command
-  program
+  const crawlCommand = program
     .command("crawl")
     .description("Crawl a website starting from URL")
-    .argument("<url>", "Starting URL for crawl")
-    .option("-o, --output-dir <dir>", "Output directory", "./crawls")
-    .option(
-      "-l, --limit <number>",
-      "Maximum number of pages to crawl",
-      (val) => Number.parseInt(val),
-      100,
-    )
-    .option("--max-depth <number>", "Maximum crawl depth", Number.parseInt)
-    .option("--allow-backward-links", "Allow crawling parent directory links")
-    .option("--allow-external-links", "Allow crawling external domains")
-    .option("--ignore-sitemap", "Ignore sitemap.xml")
-    .option("--sitemap-only", "Only crawl URLs from sitemap")
-    .option("--include-subdomains", "Include URLs from subdomains")
-    .option("--exclude-paths <paths...>", "Paths to exclude")
-    .option("--include-paths <paths...>", "Paths to include only")
-    .option("--webhook <url>", "Webhook URL for completion")
-    .option("--ignore-robots-txt", "Ignore robots.txt restrictions")
-    .option("--no-deduplicate-similar-urls", "Don't deduplicate similar URLs")
-    .option("--ignore-query-parameters", "Ignore query parameters when comparing URLs")
-    .option("--regex-on-full-url", "Apply include/exclude regex patterns on full URL")
-    .option("--delay <ms>", "Delay between requests in ms", Number.parseInt)
-    .option("--max-discovery-depth <number>", "Maximum depth for URL discovery", Number.parseInt)
-    .action(async (url: string, options) => {
-      const globalOptions = program.opts();
+    .argument("<url>", "Starting URL for crawl");
 
-      // Validate before rendering
-      validateApiConfig({ ...options, ...globalOptions });
+  addOutputOption(crawlCommand);
+  addLimitOption(crawlCommand);
+  addCrawlOptions(crawlCommand);
 
-      await renderComponent(CrawlCommand, {
-        args: [url],
-        options: {
-          ...options,
-          ...globalOptions,
-          excludePaths: options.excludePaths,
-          includePaths: options.includePaths,
-          ignoreRobotsTxt: options.ignoreRobotsTxt || false,
-          deduplicateSimilarUrls: options.deduplicateSimilarUrls !== false,
-          ignoreQueryParameters: options.ignoreQueryParameters || false,
-          regexOnFullUrl: options.regexOnFullUrl || false,
-          maxDiscoveryDepth: options.maxDiscoveryDepth,
-        },
-      });
-    });
+  crawlCommand.action(createBaseAction(CrawlCommand, transformCrawlOptions));
 
   // Map command
-  program
+  const mapCommand = program
     .command("map")
     .description("Discover all URLs on a website")
-    .argument("<url>", "URL to map")
-    .option("-o, --output-dir <dir>", "Output directory", "./crawls")
+    .argument("<url>", "URL to map");
+
+  addOutputOption(mapCommand);
+  mapCommand
     .option("-l, --limit <number>", "Maximum number of URLs to discover", Number.parseInt)
     .option("--include-subdomains", "Include URLs from subdomains", false)
     .option("--output <type>", "Output type: console, file, both", "file")
     .option("--search <query>", "Search query to filter URLs")
     .option("--ignore-sitemap", "Ignore sitemap.xml", true)
     .option("--sitemap-only", "Only return URLs from sitemap", false)
-    .option("--timeout <ms>", "Timeout in milliseconds", Number.parseInt)
-    .action(async (url: string, options) => {
-      const globalOptions = program.opts();
+    .option("--timeout <ms>", "Timeout in milliseconds", Number.parseInt);
 
-      // Validate before rendering
-      validateApiConfig({ ...options, ...globalOptions });
-
-      await renderComponent(MapCommand, {
-        args: [url],
-        options: {
-          ...options,
-          ...globalOptions,
-        },
-      });
-    });
+  mapCommand.action(createBaseAction(MapCommand));
 
   // Default action: fcrawl <url>
-  program
-    .argument("[url]", "URL to crawl")
-    .option("-o, --output-dir <dir>", "Output directory", "./crawls")
-    .option(
-      "-l, --limit <number>",
-      "Maximum number of pages to crawl",
-      (val) => Number.parseInt(val),
-      100,
-    )
-    .option("--max-depth <number>", "Maximum crawl depth", Number.parseInt)
-    .option("--allow-backward-links", "Allow crawling parent directory links")
-    .option("--allow-external-links", "Allow crawling external domains")
-    .option("--ignore-sitemap", "Ignore sitemap.xml")
-    .option("--sitemap-only", "Only crawl URLs from sitemap")
-    .option("--include-subdomains", "Include URLs from subdomains")
-    .option("--exclude-paths <paths...>", "Paths to exclude")
-    .option("--include-paths <paths...>", "Paths to include only")
-    .option("--webhook <url>", "Webhook URL for completion")
-    .option("--ignore-robots-txt", "Ignore robots.txt restrictions")
-    .option("--no-deduplicate-similar-urls", "Don't deduplicate similar URLs")
-    .option("--ignore-query-parameters", "Ignore query parameters when comparing URLs")
-    .option("--regex-on-full-url", "Apply include/exclude regex patterns on full URL")
-    .option("--delay <ms>", "Delay between requests in ms", Number.parseInt)
-    .option("--max-discovery-depth <number>", "Maximum depth for URL discovery", Number.parseInt)
-    .action(async (url: string | undefined, options) => {
-      const globalOptions = program.opts();
+  program.argument("[url]", "URL to crawl");
+  addOutputOption(program);
+  addLimitOption(program);
+  addCrawlOptions(program);
 
-      // Show help if no URL provided
-      if (!url || url.startsWith("-")) {
-        program.outputHelp();
-        process.exit(1);
-      }
+  program.action(async (url: string | undefined, options) => {
+    // Show help if no URL provided
+    if (!url || url.startsWith("-")) {
+      program.outputHelp();
+      process.exit(1);
+    }
 
-      // Validate before rendering
-      validateApiConfig({ ...options, ...globalOptions });
+    // For the default command, options ARE the global options
+    // So we need to handle this differently
+    const mergedOptions = transformCrawlOptions(options);
 
-      await renderComponent(DefaultCommand, {
-        args: [url],
-        options: {
-          ...options,
-          ...globalOptions,
-          excludePaths: options.excludePaths,
-          includePaths: options.includePaths,
-          ignoreRobotsTxt: options.ignoreRobotsTxt || false,
-          deduplicateSimilarUrls: options.deduplicateSimilarUrls !== false,
-          ignoreQueryParameters: options.ignoreQueryParameters || false,
-          regexOnFullUrl: options.regexOnFullUrl || false,
-          maxDiscoveryDepth: options.maxDiscoveryDepth,
-        },
-      });
+    // Validate API configuration
+    validateApiConfig(mergedOptions);
+
+    // Render the component
+    await renderComponent(DefaultCommand, {
+      args: [url],
+      options: mergedOptions,
     });
+  });
 
   return program;
 }

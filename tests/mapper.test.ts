@@ -20,18 +20,13 @@ mock.module("@mendable/firecrawl-js", () => ({
         throw new Error("Failed to map URL");
       }
 
-      const baseUrls = [
-        `${url}/`,
-        `${url}/about`,
-        `${url}/products`,
-        `${url}/contact`,
-      ];
+      const baseUrls = [`${url}/`, `${url}/about`, `${url}/products`, `${url}/contact`];
 
       // Add subdomain URLs if requested
       if (options?.includeSubdomains) {
         baseUrls.push(
           `https://blog.${url.replace("https://", "")}`,
-          `https://api.${url.replace("https://", "")}`
+          `https://api.${url.replace("https://", "")}`,
         );
       }
 
@@ -71,12 +66,9 @@ describe("mapper", () => {
 
       await map(options.url, options);
 
-      expect(mockMkdir).toHaveBeenCalledWith(
-        expect.stringContaining("test-output/example.com"),
-        {
-          recursive: true,
-        }
-      );
+      expect(mockMkdir).toHaveBeenCalledWith(expect.stringContaining("test-output/example.com"), {
+        recursive: true,
+      });
 
       // Should save both JSON and TXT files
       expect(mockWriteFile).toHaveBeenCalledTimes(2);
@@ -85,12 +77,8 @@ describe("mapper", () => {
       const calls = mockWriteFile.mock.calls;
 
       // Find JSON and TXT calls
-      const jsonCall = calls.find((call: any) =>
-        call[0].includes("sitemap.json")
-      );
-      const txtCall = calls.find((call: any) =>
-        call[0].includes("sitemap.txt")
-      );
+      const jsonCall = calls.find((call: any) => call[0].includes("sitemap.json"));
+      const txtCall = calls.find((call: any) => call[0].includes("sitemap.txt"));
 
       // Check JSON file
       expect(jsonCall).toBeDefined();
@@ -158,7 +146,7 @@ describe("mapper", () => {
       await map(options.url, options);
 
       const jsonCall = mockWriteFile.mock.calls.find((call: any) =>
-        call[0].includes("sitemap.json")
+        call[0].includes("sitemap.json"),
       );
       const jsonContent = JSON.parse(jsonCall[1]);
 
@@ -181,14 +169,12 @@ describe("mapper", () => {
       await map(options.url, options);
 
       const jsonCall = mockWriteFile.mock.calls.find((call: any) =>
-        call[0].includes("sitemap.json")
+        call[0].includes("sitemap.json"),
       );
       const jsonContent = JSON.parse(jsonCall[1]);
 
       expect(jsonContent.includeSubdomains).toBe(true);
-      expect(
-        jsonContent.urls.some((u: any) => u.url.includes("blog.example.com"))
-      ).toBe(true);
+      expect(jsonContent.urls.some((u: any) => u.url.includes("blog.example.com"))).toBe(true);
     });
   });
 
@@ -226,7 +212,7 @@ describe("mapper", () => {
 
       expect(mockMkdir).toHaveBeenCalledWith(
         expect.stringContaining("new-output-dir/example.com"),
-        { recursive: true }
+        { recursive: true },
       );
     });
   });

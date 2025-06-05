@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { existsSync } from "node:fs";
 import { readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
@@ -14,15 +14,24 @@ describe("subcommand integration tests", () => {
 
     // Build the executable
     await $`bun run build`;
+  });
 
-    // Clean up any existing test output
+  beforeEach(async () => {
+    // Clean up any existing test output before each test
+    if (existsSync(testOutputDir)) {
+      await rm(testOutputDir, { recursive: true });
+    }
+  });
+
+  afterEach(async () => {
+    // Clean up test output after each test
     if (existsSync(testOutputDir)) {
       await rm(testOutputDir, { recursive: true });
     }
   });
 
   afterAll(async () => {
-    // Clean up test output
+    // Final cleanup (in case afterEach fails)
     if (existsSync(testOutputDir)) {
       await rm(testOutputDir, { recursive: true });
     }
@@ -63,6 +72,17 @@ describe("subcommand integration tests", () => {
 
       // Check that both formats were saved
       expect(existsSync(join(testOutputDir, "example.com", "index.md"))).toBe(true);
+
+      // Debug: Check what files were actually created
+      if (!existsSync(join(testOutputDir, "example.com", "index.html"))) {
+        const { stdout } =
+          await $`find ${testOutputDir} -name "*.html" 2>/dev/null || true`.quiet();
+        console.error("HTML file not found. Files in test output dir:", stdout.toString());
+        const { stdout: lsOutput } =
+          await $`ls -la ${testOutputDir}/example.com/ 2>/dev/null || echo "Directory not found"`.quiet();
+        console.error("Contents of example.com dir:", lsOutput.toString());
+      }
+
       expect(existsSync(join(testOutputDir, "example.com", "index.html"))).toBe(true);
     });
 
@@ -116,6 +136,27 @@ describe("subcommand integration tests", () => {
       // Check that sitemap files were created
       const jsonPath = join(testOutputDir, "example.com", "sitemap.json");
       const txtPath = join(testOutputDir, "example.com", "sitemap.txt");
+
+      // Debug: Check what files were actually created
+      if (!existsSync(jsonPath)) {
+        console.error("Expected JSON path:", jsonPath);
+        console.error("Test output dir:", testOutputDir);
+        const { stdout } =
+          await $`find ${testOutputDir} -name "*.json" 2>/dev/null || true`.quiet();
+        console.error("JSON file not found. Files in test output dir:", stdout.toString());
+        const { stdout: lsOutput } =
+          await $`ls -la ${testOutputDir}/ 2>/dev/null || echo "Directory not found"`.quiet();
+        console.error("Contents of test output dir:", lsOutput.toString());
+        if (existsSync(join(testOutputDir, "example.com"))) {
+          const { stdout: lsOutput2 } =
+            await $`ls -la ${testOutputDir}/example.com/ 2>/dev/null || echo "Directory not found"`.quiet();
+          console.error("Contents of example.com dir:", lsOutput2.toString());
+        }
+        // Also check the default crawls directory
+        const { stdout: crawlsOutput } =
+          await $`ls -la ./crawls/ 2>/dev/null || echo "Directory not found"`.quiet();
+        console.error("Contents of ./crawls dir:", crawlsOutput.toString());
+      }
 
       expect(existsSync(jsonPath)).toBe(true);
       expect(existsSync(txtPath)).toBe(true);

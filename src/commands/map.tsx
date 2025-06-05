@@ -1,10 +1,7 @@
-import { Text } from "ink";
+import { Text, useApp } from "ink";
 import React from "react";
-import { loggers } from "../logger";
 import { map } from "../mapper";
 import type { MapOptions } from "../schemas/cli";
-
-const log = loggers.cli;
 
 type Props = {
   args: [string];
@@ -26,14 +23,10 @@ type Props = {
 export default function MapCommand({ args: [url], options }: Props) {
   const [status, setStatus] = React.useState("Initializing...");
   const [error, setError] = React.useState<string | null>(null);
+  const app = useApp();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: CLI runs once and exits
   React.useEffect(() => {
-    if (options.verbose && !process.env.NODE_DEBUG) {
-      process.env.NODE_DEBUG = "fcrawl:*";
-      log("Enabled verbose logging");
-    }
-
     const runMap = async () => {
       try {
         if (!url) {
@@ -57,10 +50,11 @@ export default function MapCommand({ args: [url], options }: Props) {
 
         await map(url, mapOptions);
         setStatus(`Successfully mapped ${url}`);
-        process.exit(0);
+        app.exit();
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err));
-        process.exit(1);
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        app.exit(new Error(msg));
       }
     };
 

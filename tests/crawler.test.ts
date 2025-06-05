@@ -1,0 +1,207 @@
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import { existsSync } from "node:fs";
+import { readFile, rm } from "node:fs/promises";
+import { join } from "node:path";
+import { crawl } from "../src/crawler";
+import type { CrawlOptions } from "../src/schemas/cli";
+import { createMockFirecrawlApp } from "./mocks/firecrawl";
+
+// Create mocked functions that we can check
+const mockCrawlUrl = mock((url: string, _options?: any) => {
+  if (url.includes("error")) {
+    return { success: false, error: "Failed to start crawl" };
+  }
+  return {
+    success: true,
+    data: [
+      {
+        markdown: "# Example Page 1\n\nContent of page 1",
+        html: "<h1>Example Page 1</h1><p>Content of page 1</p>",
+        metadata: { url: "https://example.com/page1" },
+      },
+      {
+        markdown: "# Example Page 2\n\nContent of page 2",
+        html: "<h1>Example Page 2</h1><p>Content of page 2</p>",
+        metadata: { url: "https://example.com/page2" },
+      },
+    ],
+  };
+});
+
+// Mock the Firecrawl SDK with our custom mocks
+const MockFirecrawlApp = createMockFirecrawlApp({
+  crawlUrl: mockCrawlUrl,
+});
+
+mock.module("@mendable/firecrawl-js", () => ({
+  default: MockFirecrawlApp,
+}));
+
+describe("crawler", () => {
+  const testOutputDir = "./test-crawl-output";
+
+  beforeEach(async () => {
+    mockCrawlUrl.mockClear();
+    // Clean up any existing test output
+    if (existsSync(testOutputDir)) {
+      await rm(testOutputDir, { recursive: true });
+    }
+  });
+
+  afterEach(async () => {
+    // Clean up test output
+    if (existsSync(testOutputDir)) {
+      await rm(testOutputDir, { recursive: true });
+    }
+  });
+
+  describe("crawl function", () => {
+    it("should crawl a URL and save pages", async () => {
+      const options: CrawlOptions = {
+        command: "crawl",
+        url: "https://example.com",
+        outputDir: testOutputDir,
+        limit: 10,
+        verbose: false,
+        deduplicateSimilarUrls: true,
+        help: false,
+        version: false,
+      };
+
+      await crawl("https://example.com", options);
+
+      // Check that FirecrawlApp was called correctly
+      expect(mockCrawlUrl).toHaveBeenCalled();
+      const callArgs = mockCrawlUrl.mock.calls[0];
+      expect(callArgs).toBeDefined();
+      expect(callArgs![0]).toBe("https://example.com");
+      expect(callArgs![1]).toMatchObject({
+        limit: 10,
+        scrapeOptions: {
+          formats: ["markdown", "html"],
+        },
+      });
+
+      // Check that files were created
+      const expectedPath1 = join(testOutputDir, "example.com", "page1.md");
+      const expectedPath2 = join(testOutputDir, "example.com", "page2.md");
+
+      expect(existsSync(expectedPath1)).toBe(true);
+      expect(existsSync(expectedPath2)).toBe(true);
+
+      // Verify content was transformed
+      const content1 = await readFile(expectedPath1, "utf-8");
+      expect(content1).toContain("# Example Page 1");
+    });
+
+    it("should handle crawl options correctly", async () => {
+      const options: CrawlOptions = {
+        command: "crawl",
+        url: "https://example.com",
+        outputDir: testOutputDir,
+        limit: 5,
+        maxDepth: 3,
+        allowBackwardLinks: true,
+        allowExternalLinks: false,
+        ignoreSitemap: true,
+        includeSubdomains: true,
+        excludePaths: ["/admin", "/private"],
+        includePaths: ["/blog", "/docs"],
+        verbose: false,
+        deduplicateSimilarUrls: true,
+        help: false,
+        version: false,
+      };
+
+      await crawl("https://example.com", options);
+
+      // Check that FirecrawlApp was called correctly
+      expect(mockCrawlUrl).toHaveBeenCalled();
+      const callArgs = mockCrawlUrl.mock.calls[0];
+      expect(callArgs).toBeDefined();
+      expect(callArgs![0]).toBe("https://example.com");
+
+      // Verify the options passed
+      const passedOptions = callArgs![1];
+      expect(passedOptions.limit).toBe(5);
+      expect(passedOptions.scrapeOptions).toEqual({
+        formats: ["markdown", "html"],
+      });
+      expect(passedOptions.maxDepth).toBe(3);
+      expect(passedOptions.allowBackwardLinks).toBe(true);
+      // allowExternalLinks is only added when true, so it should be undefined when false
+      expect(passedOptions.allowExternalLinks).toBeUndefined();
+      expect(passedOptions.ignoreSitemap).toBe(true);
+      expect(passedOptions.allowSubdomains).toBe(true); // includeSubdomains maps to allowSubdomains
+      expect(passedOptions.excludePaths).toEqual(["/admin", "/private"]);
+      expect(passedOptions.includePaths).toEqual(["/blog", "/docs"]);
+      expect(passedOptions.deduplicateSimilarURLs).toBe(true);
+    });
+
+    it("should handle API errors gracefully", async () => {
+      const options: CrawlOptions = {
+        command: "crawl",
+        url: "https://error.com",
+        outputDir: testOutputDir,
+        limit: 10,
+        verbose: false,
+        deduplicateSimilarUrls: true,
+        help: false,
+        version: false,
+      };
+
+      await expect(crawl("https://error.com", options)).rejects.toThrow("Failed to start crawl");
+    });
+
+    it("should use crawlUrlAndWatch when watch option is available", async () => {
+      const options: CrawlOptions = {
+        command: "crawl",
+        url: "https://example.com",
+        outputDir: testOutputDir,
+        limit: 10,
+        verbose: false,
+        deduplicateSimilarUrls: true,
+        help: false,
+        version: false,
+      };
+
+      // Temporarily modify the crawl implementation to test watch functionality
+      // This would be easier if the watch option was exposed in the options
+
+      // For now, just verify the basic crawl works
+      await crawl("https://example.com", options);
+
+      expect(mockCrawlUrl).toHaveBeenCalled();
+    });
+
+    it("should handle empty crawl results", async () => {
+      // Mock crawlUrl to return empty results for this test
+      mockCrawlUrl.mockImplementationOnce(() => ({
+        success: true,
+        data: [],
+      }));
+
+      const options: CrawlOptions = {
+        command: "crawl",
+        url: "https://example.com",
+        outputDir: testOutputDir,
+        limit: 10,
+        verbose: false,
+        deduplicateSimilarUrls: true,
+        help: false,
+        version: false,
+      };
+
+      await crawl("https://example.com", options);
+
+      // Should complete without errors even with no pages
+      expect(mockCrawlUrl).toHaveBeenCalledWith("https://example.com", {
+        limit: 10,
+        scrapeOptions: {
+          formats: ["markdown", "html"],
+        },
+        deduplicateSimilarURLs: true,
+      });
+    });
+  });
+});

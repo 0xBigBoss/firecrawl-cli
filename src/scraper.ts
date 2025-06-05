@@ -1,4 +1,4 @@
-import FirecrawlApp from "@mendable/firecrawl-js";
+import { createFirecrawlApp } from "./libs/firecrawl-client";
 import { loggers } from "./logger";
 import type { ScrapeOptions } from "./schemas/cli";
 import { savePage } from "./storage";
@@ -19,9 +19,9 @@ export async function scrape(urls: string[], options: ScrapeOptions): Promise<vo
 
   // Initialize Firecrawl
   log("Initializing Firecrawl app");
-  const app = new FirecrawlApp({
-    apiUrl: options.apiUrl || process.env.FIRECRAWL_API_URL,
-    apiKey: options.apiKey || process.env.FIRECRAWL_API_KEY,
+  const app = createFirecrawlApp({
+    apiUrl: options.apiUrl,
+    apiKey: options.apiKey,
   });
 
   // Build scrape options
@@ -105,20 +105,20 @@ export async function scrape(urls: string[], options: ScrapeOptions): Promise<vo
 
       // Save HTML content if requested
       if (data.html && options.formats?.includes("html")) {
-        const _htmlPath = await savePage(url, data.html, url, options.outputDir, ".html");
+        await savePage(url, data.html, url, options.outputDir, ".html");
         console.log(`✓ Saved HTML: ${url}`);
       }
 
       // Save raw HTML if requested
       if (data.rawHtml && options.formats?.includes("rawHtml")) {
-        const _rawHtmlPath = await savePage(url, data.rawHtml, url, options.outputDir, ".raw.html");
+        await savePage(url, data.rawHtml, url, options.outputDir, ".raw.html");
         console.log(`✓ Saved raw HTML: ${url}`);
       }
 
       // Save links if requested
       if (data.links && options.formats?.includes("links")) {
         const linksContent = JSON.stringify(data.links, null, 2);
-        const _linksPath = await savePage(url, linksContent, url, options.outputDir, ".links.json");
+        await savePage(url, linksContent, url, options.outputDir, ".links.json");
         console.log(`✓ Saved links: ${url}`);
       }
 
@@ -128,13 +128,7 @@ export async function scrape(urls: string[], options: ScrapeOptions): Promise<vo
         const screenshotData = data.screenshot.replace(/^data:image\/\w+;base64,/, "");
         const buffer = Buffer.from(screenshotData, "base64");
 
-        const _screenshotPath = await savePage(
-          url,
-          buffer.toString("binary"),
-          url,
-          options.outputDir,
-          ".png",
-        );
+        await savePage(url, buffer.toString("binary"), url, options.outputDir, ".png");
         console.log(`✓ Saved screenshot: ${url}`);
       }
 
