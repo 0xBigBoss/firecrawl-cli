@@ -149,27 +149,30 @@ mock.module("@mendable/firecrawl-js", () => ({
 
 When both tests run together, the second mock overwrites the first, causing test1 to potentially fail or behave unexpectedly.
 
+#### Solution: Run Tests in Isolation
+
+The most reliable workaround is to run each test file in its own process:
+
+```bash
+# Run tests in isolated processes (recommended)
+bun run test:isolated
+```
+
+This command uses `find` and `xargs` with parallel execution (`-P 8`) to run each test file in its own process, ensuring no mock conflicts occur between test files.
+
 #### Best Practices to Avoid Mock Conflicts
 
-1. **Use unique test output directories**:
+1. **Use the isolated test runner for CI/CD**:
+   ```bash
+   bun run test:isolated
+   ```
+
+2. **Use unique test output directories**:
    ```typescript
    const testOutputDir = `./test-${testName}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
    ```
 
-2. **Create fresh mocks in beforeEach**:
-   ```typescript
-   beforeEach(() => {
-     const mockFunction = mock((url: string) => {
-       // mock implementation
-     });
-     
-     mock.module("module-name", () => ({
-       default: createMock(mockFunction)
-     }));
-   });
-   ```
-
-3. **Run conflicting tests individually**:
+3. **Run specific tests when debugging**:
    ```bash
    # Run specific test file
    bun test tests/crawler.test.ts
@@ -212,10 +215,13 @@ When both tests run together, the second mock overwrites the first, causing test
 #### Future Improvements
 
 As Bun's testing framework evolves, better mock isolation may become available. For now:
+- Use the `test:isolated` script for reliable test runs
 - Keep mock complexity minimal
 - Prefer integration tests with real implementations where possible
 - Document which tests need isolation
 - Consider using different mocking strategies for complex scenarios
+
+**Note**: Moving mocks to `beforeEach` does NOT solve the global mock issue in Bun, as `mock.module()` still creates global mocks regardless of where it's called.
 
 ## Development Workflow
 

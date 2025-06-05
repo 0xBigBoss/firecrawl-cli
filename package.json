@@ -14,6 +14,7 @@
     "test:coverage": "bun test --coverage",
     "test:links": "bun test src/tests/transform.test.ts",
     "test:integration": "bun run build && bun test src/tests/integration.test.ts",
+    "test:isolated": "find tests -name '*.test.ts' | xargs -P 8 -I {} sh -c 'bun test {} || exit 255'",
     "typecheck": "bun tsc --noEmit",
     "lint": "biome check . && bunx tsgo",
     "lint:fix": "biome check --write .",

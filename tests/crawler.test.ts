@@ -4,8 +4,6 @@ import { readFile, rm } from "node:fs/promises";
 import { crawl } from "../src/crawler";
 import type { CrawlOptions } from "../src/schemas/cli";
 
-// Note: These tests may fail when run with all tests due to global mock conflicts
-// They pass when run individually with: bun test tests/crawler.test.ts
 describe("crawler", () => {
   let testOutputDir: string;
   let mockCrawlUrl: any;
@@ -14,36 +12,42 @@ describe("crawler", () => {
     // Create unique test directory for each test with 'crawler' prefix to avoid conflicts
     testOutputDir = `./test-crawler-output-${Date.now()}-${Math.random().toString(36).substring(7)}`;
 
-    // Create fresh mock for each test
+    // Create custom mock for this test
     mockCrawlUrl = mock((url: string, _options?: any) => {
       if (url.includes("error")) {
         return { success: false, error: "Failed to start crawl" };
       }
+
+      // For the empty results test
+      if (url === "https://empty-results-test.com") {
+        return {
+          success: true,
+          data: [],
+        };
+      }
+
       return {
         success: true,
         data: [
           {
             markdown: "# Example Page 1\n\nContent of page 1",
             html: "<h1>Example Page 1</h1><p>Content of page 1</p>",
-            metadata: { url: "https://example.com/page1" },
+            metadata: { url: `${url}/page1` },
           },
           {
             markdown: "# Example Page 2\n\nContent of page 2",
             html: "<h1>Example Page 2</h1><p>Content of page 2</p>",
-            metadata: { url: "https://example.com/page2" },
+            metadata: { url: `${url}/page2` },
           },
         ],
       };
     });
 
-    // Mock the module for this test
-    const { createMockFirecrawlApp } = await import("./mocks/firecrawl");
-    const MockFirecrawlApp = createMockFirecrawlApp({
-      crawlUrl: mockCrawlUrl,
-    });
-
+    // Mock the module in beforeEach to avoid global conflicts
     mock.module("@mendable/firecrawl-js", () => ({
-      default: MockFirecrawlApp,
+      default: class FirecrawlApp {
+        crawlUrl = mockCrawlUrl;
+      },
     }));
   });
 
@@ -52,17 +56,15 @@ describe("crawler", () => {
     if (testOutputDir && existsSync(testOutputDir)) {
       await rm(testOutputDir, { recursive: true });
     }
-    // Clear mocks
-    if (mockCrawlUrl) {
-      mockCrawlUrl.mockClear();
-    }
   });
 
   describe("crawl function", () => {
     it("should crawl a URL and save pages", async () => {
+      // Use a unique URL for this test to avoid conflicts
+      const testUrl = `https://test-${Date.now()}.example.com`;
       const options: CrawlOptions = {
         command: "crawl",
-        url: "https://example.com",
+        url: testUrl,
         outputDir: testOutputDir,
         limit: 10,
         verbose: false,
@@ -71,16 +73,16 @@ describe("crawler", () => {
         version: false,
       };
 
-      await crawl("https://example.com", options);
+      await crawl(testUrl, options);
 
       // Wait a bit to ensure file system operations complete
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       // Check that FirecrawlApp was called correctly
       expect(mockCrawlUrl).toHaveBeenCalled();
       const callArgs = mockCrawlUrl.mock.calls[0];
       expect(callArgs).toBeDefined();
-      expect(callArgs![0]).toBe("https://example.com");
+      expect(callArgs![0]).toBe(testUrl);
       expect(callArgs![1]).toMatchObject({
         limit: 10,
         scrapeOptions: {
@@ -90,8 +92,27 @@ describe("crawler", () => {
 
       // Check that files were created
       // Use the same path format as savePage uses
-      const expectedPath1 = `${testOutputDir}/example.com/page1.md`;
-      const expectedPath2 = `${testOutputDir}/example.com/page2.md`;
+      const domain = new URL(testUrl).hostname;
+      const expectedPath1 = `${testOutputDir}/${domain}/page1.md`;
+      const expectedPath2 = `${testOutputDir}/${domain}/page2.md`;
+
+      // Debug: List directory contents if files don't exist
+      if (!existsSync(expectedPath1) || !existsSync(expectedPath2)) {
+        const { readdirSync } = await import("node:fs");
+        console.error(
+          "Test directory contents:",
+          testOutputDir,
+          "exists:",
+          existsSync(testOutputDir),
+        );
+        if (existsSync(testOutputDir)) {
+          console.error("Contents:", readdirSync(testOutputDir));
+          const domainDir = `${testOutputDir}/${domain}`;
+          if (existsSync(domainDir)) {
+            console.error("Domain dir contents:", readdirSync(domainDir));
+          }
+        }
+      }
 
       expect(existsSync(expectedPath1)).toBe(true);
       expect(existsSync(expectedPath2)).toBe(true);
@@ -182,15 +203,9 @@ describe("crawler", () => {
     });
 
     it("should handle empty crawl results", async () => {
-      // Mock crawlUrl to return empty results for this test
-      mockCrawlUrl.mockImplementationOnce(() => ({
-        success: true,
-        data: [],
-      }));
-
       const options: CrawlOptions = {
         command: "crawl",
-        url: "https://example.com",
+        url: "https://empty-results-test.com",
         outputDir: testOutputDir,
         limit: 10,
         verbose: false,
@@ -199,10 +214,10 @@ describe("crawler", () => {
         version: false,
       };
 
-      await crawl("https://example.com", options);
+      await crawl("https://empty-results-test.com", options);
 
       // Should complete without errors even with no pages
-      expect(mockCrawlUrl).toHaveBeenCalledWith("https://example.com", {
+      expect(mockCrawlUrl).toHaveBeenCalledWith("https://empty-results-test.com", {
         limit: 10,
         scrapeOptions: {
           formats: ["markdown", "html"],
