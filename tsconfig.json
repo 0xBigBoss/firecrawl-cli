@@ -1,5 +1,14 @@
 {
   "compilerOptions": {
+    // Project layout
+    "rootDir": ".",
+    "outDir": "dist",
+    "sourceMap": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@tests/*": ["./tests/*"]
+    },
+
     // Environment setup & latest features
     "lib": ["ESNext"],
     "target": "ESNext",

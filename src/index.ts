@@ -2,9 +2,8 @@
 import { createCLI } from "./cli";
 
 async function main() {
-  const program = createCLI();
-
   try {
+    const program = createCLI();
     await program.parseAsync(process.argv);
   } catch (error) {
     console.error("Error:", error instanceof Error ? error.message : error);
@@ -12,7 +11,4 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error("Fatal error:", error);
-  process.exit(1);
-});
+main();

@@ -18,14 +18,8 @@ export function createCLI(): Command {
     .version(VERSION)
     .description("Web crawler and scraper using Firecrawl API")
     .option("-v, --verbose", "Enable verbose output", false)
-    .option(
-      "--api-url <url>",
-      "Firecrawl API URL (overrides FIRECRAWL_API_URL env var)"
-    )
-    .option(
-      "--api-key <key>",
-      "Firecrawl API key (overrides FIRECRAWL_API_KEY env var)"
-    )
+    .option("--api-url <url>", "Firecrawl API URL (overrides FIRECRAWL_API_URL env var)")
+    .option("--api-key <key>", "Firecrawl API key (overrides FIRECRAWL_API_KEY env var)")
     .hook("preAction", (thisCommand) => {
       const options = thisCommand.opts();
       if (options.verbose && !process.env.NODE_DEBUG) {
@@ -40,16 +34,9 @@ export function createCLI(): Command {
     .description("Scrape one or more URLs")
     .argument("<urls...>", "URLs to scrape")
     .option("-o, --output-dir <dir>", "Output directory", "./crawls")
-    .option(
-      "--formats <formats...>",
-      "Content formats (markdown,html,screenshot,rawHtml,links)"
-    )
+    .option("--formats <formats...>", "Content formats (markdown,html,screenshot,rawHtml,links)")
     .option("--screenshot", "Include screenshot")
-    .option(
-      "--wait-for <ms>",
-      "Wait time in ms for dynamic content",
-      Number.parseInt
-    )
+    .option("--wait-for <ms>", "Wait time in ms for dynamic content", Number.parseInt)
     .option("--no-only-main-content", "Include all content, not just main")
     .option("--include-tags <tags...>", "HTML tags to include")
     .option("--exclude-tags <tags...>", "HTML tags to exclude")
@@ -88,7 +75,7 @@ export function createCLI(): Command {
       "-l, --limit <number>",
       "Maximum number of pages to crawl",
       (val) => Number.parseInt(val),
-      100
+      100,
     )
     .option("--max-depth <number>", "Maximum crawl depth", Number.parseInt)
     .option("--allow-backward-links", "Allow crawling parent directory links")
@@ -101,20 +88,10 @@ export function createCLI(): Command {
     .option("--webhook <url>", "Webhook URL for completion")
     .option("--ignore-robots-txt", "Ignore robots.txt restrictions")
     .option("--no-deduplicate-similar-urls", "Don't deduplicate similar URLs")
-    .option(
-      "--ignore-query-parameters",
-      "Ignore query parameters when comparing URLs"
-    )
-    .option(
-      "--regex-on-full-url",
-      "Apply include/exclude regex patterns on full URL"
-    )
+    .option("--ignore-query-parameters", "Ignore query parameters when comparing URLs")
+    .option("--regex-on-full-url", "Apply include/exclude regex patterns on full URL")
     .option("--delay <ms>", "Delay between requests in ms", Number.parseInt)
-    .option(
-      "--max-discovery-depth <number>",
-      "Maximum depth for URL discovery",
-      Number.parseInt
-    )
+    .option("--max-discovery-depth <number>", "Maximum depth for URL discovery", Number.parseInt)
     .action(async (url: string, options) => {
       const globalOptions = program.opts();
 
@@ -143,11 +120,7 @@ export function createCLI(): Command {
     .description("Discover all URLs on a website")
     .argument("<url>", "URL to map")
     .option("-o, --output-dir <dir>", "Output directory", "./crawls")
-    .option(
-      "-l, --limit <number>",
-      "Maximum number of URLs to discover",
-      Number.parseInt
-    )
+    .option("-l, --limit <number>", "Maximum number of URLs to discover", Number.parseInt)
     .option("--include-subdomains", "Include URLs from subdomains", false)
     .option("--output <type>", "Output type: console, file, both", "file")
     .option("--search <query>", "Search query to filter URLs")
@@ -177,7 +150,7 @@ export function createCLI(): Command {
       "-l, --limit <number>",
       "Maximum number of pages to crawl",
       (val) => Number.parseInt(val),
-      100
+      100,
     )
     .option("--max-depth <number>", "Maximum crawl depth", Number.parseInt)
     .option("--allow-backward-links", "Allow crawling parent directory links")
@@ -190,20 +163,10 @@ export function createCLI(): Command {
     .option("--webhook <url>", "Webhook URL for completion")
     .option("--ignore-robots-txt", "Ignore robots.txt restrictions")
     .option("--no-deduplicate-similar-urls", "Don't deduplicate similar URLs")
-    .option(
-      "--ignore-query-parameters",
-      "Ignore query parameters when comparing URLs"
-    )
-    .option(
-      "--regex-on-full-url",
-      "Apply include/exclude regex patterns on full URL"
-    )
+    .option("--ignore-query-parameters", "Ignore query parameters when comparing URLs")
+    .option("--regex-on-full-url", "Apply include/exclude regex patterns on full URL")
     .option("--delay <ms>", "Delay between requests in ms", Number.parseInt)
-    .option(
-      "--max-discovery-depth <number>",
-      "Maximum depth for URL discovery",
-      Number.parseInt
-    )
+    .option("--max-discovery-depth <number>", "Maximum depth for URL discovery", Number.parseInt)
     .action(async (url: string | undefined, options) => {
       const globalOptions = program.opts();
 

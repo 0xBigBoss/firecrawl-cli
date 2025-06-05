@@ -23,7 +23,8 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@types/bun": "latest",
-    "@typescript/native-preview": "^7.0.0-dev.20250604.1"
+    "@typescript/native-preview": "^7.0.0-dev.20250604.1",
+    "lefthook": "^1.11.13"
   },
   "peerDependencies": {
     "typescript": "^5"

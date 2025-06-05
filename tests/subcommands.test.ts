@@ -1,8 +1,8 @@
-import { $ } from "bun";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { existsSync } from "node:fs";
 import { readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
+import { $ } from "bun";
 
 describe("subcommand integration tests", () => {
   const testOutputDir = "./test-crawls";
@@ -51,12 +51,8 @@ describe("subcommand integration tests", () => {
       expect(result.exitCode).toBe(0);
 
       // Check that both files were created
-      expect(existsSync(join(testOutputDir, "example.com", "index.md"))).toBe(
-        true
-      );
-      expect(existsSync(join(testOutputDir, "example.com", "test.md"))).toBe(
-        true
-      );
+      expect(existsSync(join(testOutputDir, "example.com", "index.md"))).toBe(true);
+      expect(existsSync(join(testOutputDir, "example.com", "test.md"))).toBe(true);
     });
 
     it("should handle multiple formats", async () => {
@@ -66,12 +62,8 @@ describe("subcommand integration tests", () => {
       expect(result.exitCode).toBe(0);
 
       // Check that both formats were saved
-      expect(existsSync(join(testOutputDir, "example.com", "index.md"))).toBe(
-        true
-      );
-      expect(existsSync(join(testOutputDir, "example.com", "index.html"))).toBe(
-        true
-      );
+      expect(existsSync(join(testOutputDir, "example.com", "index.md"))).toBe(true);
+      expect(existsSync(join(testOutputDir, "example.com", "index.html"))).toBe(true);
     });
 
     it("should show help for scrape command", async () => {
@@ -150,9 +142,7 @@ describe("subcommand integration tests", () => {
       const result = await $`${fcrawlPath} map --help`.quiet();
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout.toString()).toContain(
-        "Discover all URLs on a website"
-      );
+      expect(result.stdout.toString()).toContain("Discover all URLs on a website");
       expect(result.stdout.toString()).toContain("--output");
       expect(result.stdout.toString()).toContain("--include-subdomains");
     });

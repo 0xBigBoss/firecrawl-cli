@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-import type { ScrapeOptions } from "../schemas/cli";
-import { scrape } from "../scraper";
-import * as storage from "../storage";
+import type { ScrapeOptions } from "@/schemas/cli";
+import { scrape } from "@/scraper";
+import * as storage from "@/storage";
 
 // Mock the storage module
-mock.module("../storage", () => ({
+mock.module("@/storage", () => ({
   savePage: mock(() => Promise.resolve("/test/path.md")),
 }));
 

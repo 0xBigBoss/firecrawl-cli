@@ -1,4 +1,4 @@
-import { Text } from "ink";
+import { Text, useApp } from "ink";
 import React from "react";
 import { crawl } from "../crawler";
 import { loggers } from "../logger";
@@ -35,6 +35,7 @@ type Props = {
 export default function CrawlCommand({ args: [url], options }: Props) {
   const [status, setStatus] = React.useState("Initializing...");
   const [error, setError] = React.useState<string | null>(null);
+  const app = useApp();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: CLI runs once and exits
   React.useEffect(() => {
@@ -66,10 +67,10 @@ export default function CrawlCommand({ args: [url], options }: Props) {
 
         await crawl(url, crawlOptions);
         setStatus(`Successfully crawled ${url}`);
-        process.exit(0);
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err));
-        process.exit(1);
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        app.exit(new Error(msg));
       }
     };
 
