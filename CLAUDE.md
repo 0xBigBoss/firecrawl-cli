@@ -238,3 +238,16 @@ The crawler has been tested successfully with:
 - `https://bun.sh/docs/cli/test --limit 1`
 
 The output correctly transforms all internal links to relative `.md` paths while preserving external links and anchors.
+
+## Real-time Progress Display
+
+The `fcrawl crawl` command now supports real-time progress display using WebSockets when available. This feature shows:
+- Live progress with number of pages crawled
+- Current URL being processed
+- Recent URLs crawled (last 5)
+- Any errors encountered  
+- Elapsed time
+
+**Note**: Real-time progress requires WebSocket support from the Firecrawl API. Local Firecrawl instances may not support WebSockets, in which case the crawler will automatically fall back to the standard crawl method with periodic progress updates. Cloud Firecrawl instances (api.firecrawl.dev) typically support WebSockets for real-time monitoring.
+
+**Local Instance Compatibility**: The crawler automatically detects local Firecrawl instances (localhost, 127.0.0.1, private IPs) and provides a dummy API key when none is specified. This prevents WebSocket protocol errors that can occur with the Firecrawl SDK when using local instances without authentication. The detection covers common local hostnames and private IP ranges (192.168.x.x, 10.x.x.x, 172.x.x.x).
