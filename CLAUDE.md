@@ -113,8 +113,109 @@ The project includes comprehensive unit tests:
 - `cli.test.ts`: 13 tests for CLI parsing and validation
 - `transform.test.ts`: 16 tests for link transformation
 - `url.test.ts`: 13 tests for URL utilities
+- `crawler.test.ts`: 5 tests for crawler functionality
+- `mapper.test.ts`: 8 tests for URL mapping
+- `scraper.test.ts`: 9 tests for scraping functionality
+- `integration.test.ts`: 10 tests for CLI integration
+- `subcommands.test.ts`: 18 tests for subcommand functionality
 
 All tests pass and cover edge cases thoroughly.
+
+**Note**: Due to Bun's global mock system, some tests may fail when run together but pass when run individually. Specifically:
+- `crawler.test.ts` may fail when run with all tests due to mock conflicts
+- Run individually with: `bun test tests/crawler.test.ts`
+
+### Understanding Bun's mock.module Behavior
+
+Bun's `mock.module()` creates **global mocks** that persist across all test files in a test run. This can cause unexpected behavior when multiple test files mock the same module. Here's what you need to know:
+
+#### The Problem
+
+```typescript
+// test1.test.ts
+mock.module("@mendable/firecrawl-js", () => ({
+  default: class MockFirecrawlApp {
+    scrapeUrl = () => ({ success: true, data: "test1 data" })
+  }
+}));
+
+// test2.test.ts
+mock.module("@mendable/firecrawl-js", () => ({
+  default: class MockFirecrawlApp {
+    scrapeUrl = () => ({ success: true, data: "test2 data" })
+  }
+}));
+```
+
+When both tests run together, the second mock overwrites the first, causing test1 to potentially fail or behave unexpectedly.
+
+#### Best Practices to Avoid Mock Conflicts
+
+1. **Use unique test output directories**:
+   ```typescript
+   const testOutputDir = `./test-${testName}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+   ```
+
+2. **Create fresh mocks in beforeEach**:
+   ```typescript
+   beforeEach(() => {
+     const mockFunction = mock((url: string) => {
+       // mock implementation
+     });
+     
+     mock.module("module-name", () => ({
+       default: createMock(mockFunction)
+     }));
+   });
+   ```
+
+3. **Run conflicting tests individually**:
+   ```bash
+   # Run specific test file
+   bun test tests/crawler.test.ts
+   
+   # Run specific test
+   bun test tests/crawler.test.ts -t "should crawl a URL"
+   ```
+
+4. **Use test.skip when debugging**:
+   ```typescript
+   describe.skip("crawler", () => {
+     // Temporarily skip these tests when debugging other tests
+   });
+   ```
+
+#### Debugging Mock-Related Test Failures
+
+1. **Check if test passes in isolation**:
+   ```bash
+   bun test path/to/failing.test.ts
+   ```
+   If it passes alone but fails with others, it's likely a mock conflict.
+
+2. **Look for multiple mocks of the same module**:
+   ```bash
+   grep -r "mock.module" tests/ | grep "@mendable/firecrawl-js"
+   ```
+
+3. **Add debugging to understand mock state**:
+   ```typescript
+   console.log("Mock called with:", mockFunction.mock.calls);
+   console.log("Mock call count:", mockFunction.mock.calls.length);
+   ```
+
+4. **Check for file system conflicts**:
+   - Multiple tests writing to the same directory
+   - Tests not cleaning up properly in afterEach
+   - Race conditions in file operations
+
+#### Future Improvements
+
+As Bun's testing framework evolves, better mock isolation may become available. For now:
+- Keep mock complexity minimal
+- Prefer integration tests with real implementations where possible
+- Document which tests need isolation
+- Consider using different mocking strategies for complex scenarios
 
 ## Development Workflow
 

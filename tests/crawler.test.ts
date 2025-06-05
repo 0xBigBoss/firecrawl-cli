@@ -1,57 +1,60 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import { existsSync } from "node:fs";
 import { readFile, rm } from "node:fs/promises";
-import { join } from "node:path";
 import { crawl } from "../src/crawler";
 import type { CrawlOptions } from "../src/schemas/cli";
-import { createMockFirecrawlApp } from "./mocks/firecrawl";
 
-// Create mocked functions that we can check
-const mockCrawlUrl = mock((url: string, _options?: any) => {
-  if (url.includes("error")) {
-    return { success: false, error: "Failed to start crawl" };
-  }
-  return {
-    success: true,
-    data: [
-      {
-        markdown: "# Example Page 1\n\nContent of page 1",
-        html: "<h1>Example Page 1</h1><p>Content of page 1</p>",
-        metadata: { url: "https://example.com/page1" },
-      },
-      {
-        markdown: "# Example Page 2\n\nContent of page 2",
-        html: "<h1>Example Page 2</h1><p>Content of page 2</p>",
-        metadata: { url: "https://example.com/page2" },
-      },
-    ],
-  };
-});
-
-// Mock the Firecrawl SDK with our custom mocks
-const MockFirecrawlApp = createMockFirecrawlApp({
-  crawlUrl: mockCrawlUrl,
-});
-
-mock.module("@mendable/firecrawl-js", () => ({
-  default: MockFirecrawlApp,
-}));
-
+// Note: These tests may fail when run with all tests due to global mock conflicts
+// They pass when run individually with: bun test tests/crawler.test.ts
 describe("crawler", () => {
-  const testOutputDir = "./test-crawl-output";
+  let testOutputDir: string;
+  let mockCrawlUrl: any;
 
   beforeEach(async () => {
-    mockCrawlUrl.mockClear();
-    // Clean up any existing test output
-    if (existsSync(testOutputDir)) {
-      await rm(testOutputDir, { recursive: true });
-    }
+    // Create unique test directory for each test with 'crawler' prefix to avoid conflicts
+    testOutputDir = `./test-crawler-output-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
+    // Create fresh mock for each test
+    mockCrawlUrl = mock((url: string, _options?: any) => {
+      if (url.includes("error")) {
+        return { success: false, error: "Failed to start crawl" };
+      }
+      return {
+        success: true,
+        data: [
+          {
+            markdown: "# Example Page 1\n\nContent of page 1",
+            html: "<h1>Example Page 1</h1><p>Content of page 1</p>",
+            metadata: { url: "https://example.com/page1" },
+          },
+          {
+            markdown: "# Example Page 2\n\nContent of page 2",
+            html: "<h1>Example Page 2</h1><p>Content of page 2</p>",
+            metadata: { url: "https://example.com/page2" },
+          },
+        ],
+      };
+    });
+
+    // Mock the module for this test
+    const { createMockFirecrawlApp } = await import("./mocks/firecrawl");
+    const MockFirecrawlApp = createMockFirecrawlApp({
+      crawlUrl: mockCrawlUrl,
+    });
+
+    mock.module("@mendable/firecrawl-js", () => ({
+      default: MockFirecrawlApp,
+    }));
   });
 
   afterEach(async () => {
     // Clean up test output
-    if (existsSync(testOutputDir)) {
+    if (testOutputDir && existsSync(testOutputDir)) {
       await rm(testOutputDir, { recursive: true });
+    }
+    // Clear mocks
+    if (mockCrawlUrl) {
+      mockCrawlUrl.mockClear();
     }
   });
 
@@ -70,6 +73,9 @@ describe("crawler", () => {
 
       await crawl("https://example.com", options);
 
+      // Wait a bit to ensure file system operations complete
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
       // Check that FirecrawlApp was called correctly
       expect(mockCrawlUrl).toHaveBeenCalled();
       const callArgs = mockCrawlUrl.mock.calls[0];
@@ -83,8 +89,9 @@ describe("crawler", () => {
       });
 
       // Check that files were created
-      const expectedPath1 = join(testOutputDir, "example.com", "page1.md");
-      const expectedPath2 = join(testOutputDir, "example.com", "page2.md");
+      // Use the same path format as savePage uses
+      const expectedPath1 = `${testOutputDir}/example.com/page1.md`;
+      const expectedPath2 = `${testOutputDir}/example.com/page2.md`;
 
       expect(existsSync(expectedPath1)).toBe(true);
       expect(existsSync(expectedPath2)).toBe(true);
