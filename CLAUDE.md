@@ -81,6 +81,15 @@ FIRECRAWL_API_KEY=fc-YOUR_KEY           # For cloud API
 ./fcrawl scrape https://example.com --api-key fc-YOUR_KEY --limit 10
 ```
 
+## CI/CD Notes
+
+### Firecrawl Service in CI
+- Docker/Firecrawl services only run on Linux runners (GitHub Actions limitation)
+- macOS runners don't support Docker due to virtualization constraints  
+- Windows runners have limited Docker support (Windows containers only)
+- Tests use mocked Firecrawl API on all platforms
+- Real Firecrawl instance runs on Linux for future integration testing
+
 ## Known Working Examples
 
 ```bash
