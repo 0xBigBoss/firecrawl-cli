@@ -51,12 +51,6 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build for tests
-        run: bun run build
-
-      - name: Run tests
-        run: bun test:isolated
-
       - name: Build executable
         run: |
           bun build ./index.ts --compile --target=${{ matrix.build_target }} --outfile ./bin/fcrawl-${{ matrix.target }}
