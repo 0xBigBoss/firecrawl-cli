@@ -2,8 +2,7 @@ name: Release
 
 on:
   push:
-    branches: [main]  # For changesets version management
-    tags: ["v*"]      # For building and releasing binaries
+    branches: [main]  # For changesets version management and building/releasing
 
 permissions:
   contents: write
@@ -12,8 +11,11 @@ permissions:
 jobs:
   # Version management job (runs on main branch pushes)
   version:
-    if: github.ref == 'refs/heads/main' && github.repository_owner == '0xbigboss'
+    if: github.repository_owner == '0xbigboss'
     runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
+      publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,9 +39,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # Build job (runs on tag pushes)
+  # Build job (runs only if changesets published a release)
   build:
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: version
+    if: needs.version.outputs.published == 'true'
     name: Build for ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -107,10 +110,10 @@ jobs:
           name: fcrawl-${{ matrix.target }}
           path: bin/fcrawl-${{ matrix.target }}.*
 
-  # Release job (runs on tag pushes, after build completes)
+  # Release job (runs only if changesets published and build succeeded)
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
+    needs: [version, build]
+    if: needs.version.outputs.published == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -123,12 +126,16 @@ jobs:
       - name: Display artifact structure
         run: find artifacts -type f
 
-      - name: Create Release
+      - name: Get tag name from package.json
+        id: tag
+        run: echo "tag=v$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
+
+      - name: Update Release with binaries
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.tag.outputs.tag }}
           draft: false
           prerelease: false
-          generate_release_notes: true
           files: |
             artifacts/fcrawl-linux-x64/*
             artifacts/fcrawl-linux-arm64/*
