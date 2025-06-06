@@ -1,5 +1,11 @@
 # fcrawl
 
+## 0.0.5
+
+### Patch Changes
+
+- [`1bd3959`](https://github.com/0xBigBoss/firecrawl-cli/commit/1bd395994452f9e4434129369503c03f514f5d5a) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Test complete release flow with Windows build fix and binary attachment verification
+
 ## 0.0.4
 
 ### Patch Changes
