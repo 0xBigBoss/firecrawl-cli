@@ -4,250 +4,108 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a web crawler that uses Firecrawl API to crawl websites and save content as local Markdown files. The project has been fully implemented with proper modular architecture, comprehensive tests, and all features from the README.
+fcrawl is a web crawler and scraper that uses the Firecrawl API to crawl websites, scrape pages, and discover URLs. It saves content as Markdown files while preserving the site's directory structure. Built with Bun runtime, it features a React-based CLI (Ink) for rich terminal interactions.
 
 ## Development Commands
 
 ```bash
-# Install dependencies
-bun install
+# Core development
+bun install              # Install dependencies
+bun run build           # Build executable to ./bin/fcrawl
+bun typecheck           # TypeScript type checking
 
-# Run the crawler
-bun run index.ts https://example.com --limit 10
+# Testing
+bun test                # Run all tests
+bun test:isolated       # Run tests in isolation (REQUIRED for reliable results)
+bun test:unit           # Run unit tests only (excludes integration tests)
+bun test:health         # Run Firecrawl connectivity tests
+bun test:ci:linux       # CI command for Linux (unit + health + subcommands integration tests)
+bun test:ci:other       # CI command for macOS/Windows (unit tests only)
+bun test:watch          # Run tests in watch mode
+bun test:coverage       # Run tests with coverage
 
-# Run all tests
-bun test
+# Linting & Formatting
+bun lint                # Run Biome linter and tsgo
+bun lint:fix            # Auto-fix linting issues
+bun format              # Format code with Biome (normalizes line endings)
 
-# Run tests in watch mode
-bun test:watch
+# Note: Line endings are enforced as LF across all platforms via .gitattributes
+# Always run `bun format` before committing to ensure consistent formatting
 
-# Run tests with coverage
-bun test:coverage
-
-# Test link transformation specifically
-bun test:links
-
-# TypeScript checking
-bun typecheck
+# Run specific test file (when debugging mock conflicts)
+bun test tests/crawler.test.ts
 ```
 
-## Architecture & Implementation Status
+## Architecture
 
-### Current Implementation
+The project implements three main commands:
+- `crawl`: Crawl entire websites and save as Markdown
+- `scrape`: Scrape specific URLs with configurable output formats
+- `map`: Discover all URLs on a website
 
-The project is organized into modular components:
+Key architectural components:
+- React components (Ink) for interactive CLI in `src/commands/`
+- Zod schemas for type validation in `src/schemas/`
+- Firecrawl API client abstraction in `src/libs/firecrawl-client.ts`
+- Link transformation system in `src/transform.ts`
+- URL utilities in `src/utils/url.ts`
 
-- `index.ts`: Entry point that imports from src/
-- `src/index.ts`: Main application logic
-- `src/cli.ts`: CLI argument parsing and validation
-- `src/crawler.ts`: Firecrawl API integration
-- `src/storage.ts`: File system operations for saving pages
-- `src/transform.ts`: Link transformation logic
-- `src/utils/url.ts`: URL to file path mapping and relative path calculation
-- `src/tests/`: Comprehensive unit tests for all modules
+## Critical Implementation Details
 
-### Key Features Implemented
-
-1. **CLI Parsing**: Accepts target URL and --limit flag
-2. **Crawling**: Uses Firecrawl API to crawl websites with configurable limits
-3. **File Saving**: Saves pages to `crawls/domain.com/path/to/page.md` structure
-4. **Link Transformation**: Converts internal links to relative `.md` paths
-5. **Error Handling**: Graceful handling of API errors and invalid URLs
-6. **Testing**: 42 unit tests covering all functionality
-
-### Implementation Details
-
-**URL to File Path Mapping**:
-- `https://example.com/` → `crawls/example.com/index.md`
-- `https://example.com/docs/guide` → `crawls/example.com/docs/guide.md`
-- Strip `.html` extensions and handle trailing slashes
-- Handles query parameters and special characters
-
-**Link Transformation**:
-- Internal links: Convert to relative `.md` paths
-- External links: Leave unchanged
-- Anchors: Preserve as-is
-- Bare URLs: Transform if internal
-- Handles edge cases: empty link text, URLs in parentheses, protocol-relative URLs
-
-### Critical API Details
-
-**Firecrawl Response Format**: The Firecrawl API returns page data with the URL in `metadata.url`, not `page.url`. Always access URLs using:
+### Firecrawl API Response Format
+The Firecrawl API returns page URLs in `metadata.url`, not `page.url`. Always access URLs using:
 ```typescript
 const pageUrl = page.metadata?.url || page.metadata?.sourceURL || page.url;
 ```
 
-## Environment Configuration
+### Testing with Bun's Global Mocks
+Bun's `mock.module()` creates global mocks that persist across test files, causing conflicts when multiple tests mock the same module. This particularly affects tests mocking `@mendable/firecrawl-js`.
+
+**Solution**: Always use `bun test:isolated` for CI/CD and full test runs. This runs each test file in its own process.
+
+### URL to File Path Mapping
+- `https://example.com/` → `crawls/example.com/index.md`
+- `https://example.com/docs/guide` → `crawls/example.com/docs/guide.md`
+- Strips `.html` extensions and handles trailing slashes
+- Handles query parameters and special characters
+
+### Link Transformation
+The transform module converts internal links to relative `.md` paths while preserving:
+- External links (unchanged)
+- Anchors (preserved)
+- Bare URLs (transformed if internal)
+- Edge cases: empty link text, URLs in parentheses, protocol-relative URLs
+
+## Configuration
 
 ```bash
+# Environment variables
 FIRECRAWL_API_URL=http://localhost:3002  # For self-hosted instance
-FIRECRAWL_API_KEY=your-key              # For cloud API (optional)
-TARGET_URL=https://example.com          # Default crawl target (optional)
+FIRECRAWL_API_KEY=fc-YOUR_KEY           # For cloud API
+
+# CLI arguments (override env vars)
+./fcrawl crawl https://example.com --api-url http://localhost:3002
+./fcrawl scrape https://example.com --api-key fc-YOUR_KEY --limit 10
 ```
 
-### API Configuration
+## CI/CD Notes
 
-The Firecrawl API can be configured via CLI arguments or environment variables:
-
-```bash
-# Using CLI arguments (overrides env vars)
-fcrawl https://example.com --api-url http://localhost:3002
-fcrawl https://example.com --api-key fc-YOUR_KEY
-
-# Using environment variables
-export FIRECRAWL_API_URL=http://localhost:3002
-export FIRECRAWL_API_KEY=fc-YOUR_KEY
-fcrawl https://example.com
-```
-
-**TODO**: Future versions will support saving API configuration to a config file:
-- Linux/BSD: `$XDG_CONFIG_HOME/fcrawl/config.json` or `~/.config/fcrawl/config.json`
-- macOS: `~/Library/Application Support/fcrawl/config.json`
-- Windows: `%APPDATA%\fcrawl\config.json`
-
-This will allow users to save their API credentials securely without needing to set environment variables or pass them as CLI arguments each time.
-
-## Testing
-
-The project includes comprehensive unit tests:
-- `cli.test.ts`: 13 tests for CLI parsing and validation
-- `transform.test.ts`: 16 tests for link transformation
-- `url.test.ts`: 13 tests for URL utilities
-- `crawler.test.ts`: 5 tests for crawler functionality
-- `mapper.test.ts`: 8 tests for URL mapping
-- `scraper.test.ts`: 9 tests for scraping functionality
-- `integration.test.ts`: 10 tests for CLI integration
-- `subcommands.test.ts`: 18 tests for subcommand functionality
-
-All tests pass and cover edge cases thoroughly.
-
-**Note**: Due to Bun's global mock system, some tests may fail when run together but pass when run individually. Specifically:
-- `crawler.test.ts` may fail when run with all tests due to mock conflicts
-- Run individually with: `bun test tests/crawler.test.ts`
-
-### Understanding Bun's mock.module Behavior
-
-Bun's `mock.module()` creates **global mocks** that persist across all test files in a test run. This can cause unexpected behavior when multiple test files mock the same module. Here's what you need to know:
-
-#### The Problem
-
-```typescript
-// test1.test.ts
-mock.module("@mendable/firecrawl-js", () => ({
-  default: class MockFirecrawlApp {
-    scrapeUrl = () => ({ success: true, data: "test1 data" })
-  }
-}));
-
-// test2.test.ts
-mock.module("@mendable/firecrawl-js", () => ({
-  default: class MockFirecrawlApp {
-    scrapeUrl = () => ({ success: true, data: "test2 data" })
-  }
-}));
-```
-
-When both tests run together, the second mock overwrites the first, causing test1 to potentially fail or behave unexpectedly.
-
-#### Solution: Run Tests in Isolation
-
-The most reliable workaround is to run each test file in its own process:
-
-```bash
-# Run tests in isolated processes (recommended)
-bun run test:isolated
-```
-
-This command uses `find` and `xargs` with parallel execution (`-P 8`) to run each test file in its own process, ensuring no mock conflicts occur between test files.
-
-#### Best Practices to Avoid Mock Conflicts
-
-1. **Use the isolated test runner for CI/CD**:
-   ```bash
-   bun run test:isolated
-   ```
-
-2. **Use unique test output directories**:
-   ```typescript
-   const testOutputDir = `./test-${testName}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-   ```
-
-3. **Run specific tests when debugging**:
-   ```bash
-   # Run specific test file
-   bun test tests/crawler.test.ts
-   
-   # Run specific test
-   bun test tests/crawler.test.ts -t "should crawl a URL"
-   ```
-
-4. **Use test.skip when debugging**:
-   ```typescript
-   describe.skip("crawler", () => {
-     // Temporarily skip these tests when debugging other tests
-   });
-   ```
-
-#### Debugging Mock-Related Test Failures
-
-1. **Check if test passes in isolation**:
-   ```bash
-   bun test path/to/failing.test.ts
-   ```
-   If it passes alone but fails with others, it's likely a mock conflict.
-
-2. **Look for multiple mocks of the same module**:
-   ```bash
-   grep -r "mock.module" tests/ | grep "@mendable/firecrawl-js"
-   ```
-
-3. **Add debugging to understand mock state**:
-   ```typescript
-   console.log("Mock called with:", mockFunction.mock.calls);
-   console.log("Mock call count:", mockFunction.mock.calls.length);
-   ```
-
-4. **Check for file system conflicts**:
-   - Multiple tests writing to the same directory
-   - Tests not cleaning up properly in afterEach
-   - Race conditions in file operations
-
-#### Future Improvements
-
-As Bun's testing framework evolves, better mock isolation may become available. For now:
-- Use the `test:isolated` script for reliable test runs
-- Keep mock complexity minimal
-- Prefer integration tests with real implementations where possible
-- Document which tests need isolation
-- Consider using different mocking strategies for complex scenarios
-
-**Note**: Moving mocks to `beforeEach` does NOT solve the global mock issue in Bun, as `mock.module()` still creates global mocks regardless of where it's called.
-
-## Development Workflow
-
-When making changes:
-1. Run tests to ensure nothing breaks: `bun test`
-2. Use TypeScript checking: `bun typecheck`
-3. Test with a small site first: `bun run index.ts https://example.com --limit 5`
-4. The link transformation regex is complex - be careful when modifying
-5. Always test edge cases (empty links, bare URLs, etc.)
+### Firecrawl Service in CI
+- Docker/Firecrawl services only run on Linux runners (GitHub Actions limitation)
+- macOS runners don't support Docker due to virtualization constraints  
+- Windows runners have limited Docker support (Windows containers only)
+- Tests use mocked Firecrawl API on all platforms
+- Real Firecrawl instance runs on Linux for future integration testing
 
 ## Known Working Examples
 
-The crawler has been tested successfully with:
-- `https://bun.sh/docs/cli/test --limit 1`
+```bash
+# Test with Bun documentation
+./fcrawl crawl https://bun.sh/docs/cli/test --limit 1
 
-The output correctly transforms all internal links to relative `.md` paths while preserving external links and anchors.
+# Scrape a single page
+./fcrawl scrape https://example.com --format markdown
 
-## Real-time Progress Display
-
-The `fcrawl crawl` command now supports real-time progress display using WebSockets when available. This feature shows:
-- Live progress with number of pages crawled
-- Current URL being processed
-- Recent URLs crawled (last 5)
-- Any errors encountered  
-- Elapsed time
-
-**Note**: Real-time progress requires WebSocket support from the Firecrawl API. Local Firecrawl instances may not support WebSockets, in which case the crawler will automatically fall back to the standard crawl method with periodic progress updates. Cloud Firecrawl instances (api.firecrawl.dev) typically support WebSockets for real-time monitoring.
-
-**Local Instance Compatibility**: The crawler automatically detects local Firecrawl instances (localhost, 127.0.0.1, private IPs) and provides a dummy API key when none is specified. This prevents WebSocket protocol errors that can occur with the Firecrawl SDK when using local instances without authentication. The detection covers common local hostnames and private IP ranges (192.168.x.x, 10.x.x.x, 172.x.x.x).
+# Map all URLs on a site
+./fcrawl map https://example.com --limit 100
+```

@@ -5,13 +5,19 @@ import { $ } from "bun";
 describe("fcrawl executable integration tests", () => {
   const testOutputDir = "./test-crawls";
 
+  // Handle Windows .exe extension
+  const isWindows = process.platform === "win32";
+  const fcrawlBinary = isWindows ? "./bin/fcrawl.exe" : "./bin/fcrawl";
+
+  // Use environment variable or default to localhost
+  const firecrawlApiUrl = process.env.FIRECRAWL_API_URL || "http://localhost:3002";
+
   beforeEach(() => {
     // Clean up test output directory
     if (existsSync(testOutputDir)) {
       rmSync(testOutputDir, { recursive: true, force: true });
     }
-    // Clear API env vars to test validation
-    process.env.FIRECRAWL_API_URL = undefined;
+    // Clear API key to test validation, but preserve URL for tests that need it
     process.env.FIRECRAWL_API_KEY = undefined;
   });
 
@@ -23,7 +29,7 @@ describe("fcrawl executable integration tests", () => {
   });
 
   test("should display help message", async () => {
-    const result = await $`./bin/fcrawl --help`.text();
+    const result = await $`${fcrawlBinary} --help`.text();
     expect(result).toContain("Web crawler and scraper using Firecrawl API");
     expect(result).toContain("Usage: fcrawl");
     expect(result).toContain("--limit");
@@ -38,13 +44,13 @@ describe("fcrawl executable integration tests", () => {
   });
 
   test("should display version", async () => {
-    const result = await $`./bin/fcrawl --version`.text();
+    const result = await $`${fcrawlBinary} --version`.text();
     expect(result).toContain("1.1.0");
   });
 
   test("should show help when no URL provided", async () => {
     // With Commander, running without args shows help
-    const result = await $`./bin/fcrawl`.nothrow();
+    const result = await $`${fcrawlBinary}`.nothrow();
     const output = result.stdout.toString();
     expect(result.exitCode).toBe(1);
     expect(output).toContain("Usage: fcrawl");
@@ -56,7 +62,7 @@ describe("fcrawl executable integration tests", () => {
     const tempDir = `./temp-test-${Date.now()}`;
     try {
       await $`mkdir -p ${tempDir}`;
-      await $`cp ./bin/fcrawl ${tempDir}/`;
+      await $`cp ${fcrawlBinary} ${tempDir}/`;
 
       // Run crawl command in temp directory with cleared env vars
       const result =
@@ -77,7 +83,7 @@ describe("fcrawl executable integration tests", () => {
     // This test verifies the CLI parsing works correctly
     // It will fail to actually crawl, but should pass validation
     try {
-      await $`./bin/fcrawl crawl https://example.com --limit 5 --output-dir ${testOutputDir} --api-url http://localhost:3002`.quiet();
+      await $`${fcrawlBinary} crawl https://example.com --limit 5 --output-dir ${testOutputDir} --api-url ${firecrawlApiUrl}`.quiet();
     } catch (error: any) {
       // We expect it to fail when trying to connect, but validation should pass
       const stderr = error.stderr?.toString() || "";
@@ -89,7 +95,7 @@ describe("fcrawl executable integration tests", () => {
 
   test("should accept API key option", async () => {
     try {
-      await $`./bin/fcrawl crawl https://example.com --api-key fc-test-key`.quiet();
+      await $`${fcrawlBinary} crawl https://example.com --api-key fc-test-key`.quiet();
     } catch (error: any) {
       // Should pass validation but fail on actual API call
       const stderr = error.stderr?.toString() || "";
@@ -102,7 +108,7 @@ describe("fcrawl executable integration tests", () => {
     // We can't easily test the actual debug output in integration tests
     // but we can verify the flag is accepted
     try {
-      await $`./bin/fcrawl crawl https://example.com --verbose --api-url http://localhost:3002`.quiet();
+      await $`${fcrawlBinary} crawl https://example.com --verbose --api-url ${firecrawlApiUrl}`.quiet();
     } catch (error: any) {
       // Expected to fail, but should accept the flag
       const stderr = error.stderr?.toString() || "";
@@ -113,7 +119,7 @@ describe("fcrawl executable integration tests", () => {
 
   test("should handle short option flags", async () => {
     try {
-      await $`./bin/fcrawl crawl https://example.com -l 10 -o ${testOutputDir} -v --api-url http://localhost:3002`.quiet();
+      await $`${fcrawlBinary} crawl https://example.com -l 10 -o ${testOutputDir} -v --api-url ${firecrawlApiUrl}`.quiet();
     } catch (error: any) {
       // Expected to fail due to API, but should parse options
       const stderr = error.stderr?.toString() || "";
@@ -124,14 +130,14 @@ describe("fcrawl executable integration tests", () => {
   });
 
   test("should display help for scrape command", async () => {
-    const result = await $`./bin/fcrawl scrape --help`.text();
+    const result = await $`${fcrawlBinary} scrape --help`.text();
     expect(result).toContain("Scrape one or more URLs");
     expect(result).toContain("--formats");
     expect(result).toContain("--screenshot");
   });
 
   test("should display help for map command", async () => {
-    const result = await $`./bin/fcrawl map --help`.text();
+    const result = await $`${fcrawlBinary} map --help`.text();
     expect(result).toContain("Discover all URLs on a website");
     expect(result).toContain("--include-subdomains");
     expect(result).toContain("--search");

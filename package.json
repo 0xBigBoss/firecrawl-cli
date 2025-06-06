@@ -15,6 +15,10 @@
     "test:links": "bun test src/tests/transform.test.ts",
     "test:integration": "bun run build && bun test src/tests/integration.test.ts",
     "test:isolated": "find tests -name '*.test.ts' | xargs -P 8 -I {} sh -c 'bun test {} || exit 255'",
+    "test:unit": "find tests -name '*.test.ts' ! -name 'firecrawl-health.test.ts' ! -name 'subcommands.test.ts' | xargs -P 8 -I {} sh -c 'bun test {} || exit 255'",
+    "test:health": "bun test tests/firecrawl-health.test.ts",
+    "test:ci:linux": "bun run test:unit && bun run test:health && bun test tests/subcommands.test.ts",
+    "test:ci:other": "bun run test:unit",
     "typecheck": "bun tsc --noEmit",
     "lint": "biome check . && bunx tsgo",
     "lint:fix": "biome check --write .",
@@ -39,5 +43,6 @@
     "react": "^19.1.0",
     "react-devtools-core": "^6.1.2",
     "zod": "^3.25.51"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

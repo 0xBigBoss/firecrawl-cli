@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        bun-version: [latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ matrix.bun-version }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Docker is only available on Linux runners in GitHub Actions
+      # macOS runners don't support Docker due to virtualization constraints
+      # Windows runners have limited Docker support (Windows containers only)
+      - name: Start Firecrawl services (Linux only)
+        if: runner.os == 'Linux'
+        run: |
+          cp .env.ci .env
+          docker compose up -d
+          # Wait for Firecrawl API to be ready
+          echo "Waiting for Firecrawl API to be ready..."
+          timeout 60 bash -c 'until curl -sf http://localhost:3002/health; do echo -n "."; sleep 2; done' || (docker compose logs && exit 1)
+          echo " Ready!"
+          echo "Firecrawl API is running at http://localhost:3002"
+
+      - name: Note about Firecrawl on non-Linux platforms
+        if: runner.os != 'Linux'
+        run: |
+          echo "ℹ️  Firecrawl services not started on ${{ runner.os }}"
+          echo "   Docker is not available on macOS runners"
+          echo "   Windows has limited Docker support"
+          echo "   Tests will run with mocked Firecrawl API"
+
+      - name: Build binary
+        run: bun run build
+
+      - name: Run linter
+        run: bun lint
+
+      - name: Run tests
+        run: |
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            echo "Running full test suite with Firecrawl connectivity tests"
+            bun run test:ci:linux
+          else
+            echo "Running unit tests only (Docker not available on ${{ runner.os }})"
+            bun run test:ci:other
+          fi
+        shell: bash
+        env:
+          # Only set API URL on Linux where Firecrawl is actually running
+          FIRECRAWL_API_URL: ${{ runner.os == 'Linux' && 'http://localhost:3002' || '' }}
+          CI: true
+
+      - name: Test built binary
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            ./bin/fcrawl.exe --version
+          else
+            ./bin/fcrawl --version
+          fi
+        shell: bash
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcrawl-${{ matrix.os }}
+          path: ./bin/fcrawl*
+
+      - name: Stop Firecrawl services
+        if: runner.os == 'Linux' && always()
+        run: docker compose down
