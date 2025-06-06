@@ -10,7 +10,7 @@ describe("subcommand integration tests", () => {
 
   beforeAll(async () => {
     // Use the running Firecrawl instance
-    process.env.FIRECRAWL_API_URL = "http://localhost:33002";
+    process.env.FIRECRAWL_API_URL = "http://localhost:3002";
 
     // Build the executable
     await $`bun run build`;
@@ -40,7 +40,7 @@ describe("subcommand integration tests", () => {
   describe("scrape subcommand", () => {
     it("should scrape a single URL", async () => {
       const result =
-        await $`${fcrawlPath} scrape https://example.com -o ${testOutputDir} --api-url http://localhost:33002`.quiet();
+        await $`${fcrawlPath} scrape https://example.com -o ${testOutputDir} --api-url http://localhost:3002`.quiet();
 
       expect(result.exitCode).toBe(0);
 
@@ -55,7 +55,7 @@ describe("subcommand integration tests", () => {
 
     it("should scrape multiple URLs", async () => {
       const result =
-        await $`${fcrawlPath} scrape https://example.com https://example.com/test -o ${testOutputDir} --api-url http://localhost:33002`.quiet();
+        await $`${fcrawlPath} scrape https://example.com https://example.com/test -o ${testOutputDir} --api-url http://localhost:3002`.quiet();
 
       expect(result.exitCode).toBe(0);
 
@@ -66,7 +66,7 @@ describe("subcommand integration tests", () => {
 
     it("should handle multiple formats", async () => {
       const result =
-        await $`${fcrawlPath} scrape https://example.com --formats markdown html -o ${testOutputDir} --api-url http://localhost:33002`.quiet();
+        await $`${fcrawlPath} scrape https://example.com --formats markdown html -o ${testOutputDir} --api-url http://localhost:3002`.quiet();
 
       expect(result.exitCode).toBe(0);
 
@@ -99,7 +99,7 @@ describe("subcommand integration tests", () => {
   describe("crawl subcommand", () => {
     it("should crawl a website with limit", async () => {
       const result =
-        await $`${fcrawlPath} crawl https://example.com --limit 1 -o ${testOutputDir} --api-url http://localhost:33002`.quiet();
+        await $`${fcrawlPath} crawl https://example.com --limit 1 -o ${testOutputDir} --api-url http://localhost:3002`.quiet();
 
       // Note: Firecrawl's crawl functionality has issues discovering links
       // So we just check that the command runs successfully
@@ -119,7 +119,7 @@ describe("subcommand integration tests", () => {
 
     it("should accept new crawl options", async () => {
       const result =
-        await $`${fcrawlPath} crawl https://example.com --limit 1 --ignore-robots-txt -o ${testOutputDir} --api-url http://localhost:33002`.quiet();
+        await $`${fcrawlPath} crawl https://example.com --limit 1 --ignore-robots-txt -o ${testOutputDir} --api-url http://localhost:3002`.quiet();
 
       expect(result.exitCode).toBe(0);
       // Skip file checks due to Firecrawl's link discovery issues
@@ -129,7 +129,7 @@ describe("subcommand integration tests", () => {
   describe("map subcommand", () => {
     it("should map URLs and save to file", async () => {
       const result =
-        await $`${fcrawlPath} map https://example.com -o ${testOutputDir} --api-url http://localhost:33002`.quiet();
+        await $`${fcrawlPath} map https://example.com -o ${testOutputDir} --api-url http://localhost:3002`.quiet();
 
       expect(result.exitCode).toBe(0);
 
@@ -170,7 +170,7 @@ describe("subcommand integration tests", () => {
 
     it("should output to console", async () => {
       const result =
-        await $`${fcrawlPath} map https://example.com --output console --api-url http://localhost:33002`.quiet();
+        await $`${fcrawlPath} map https://example.com --output console --api-url http://localhost:3002`.quiet();
 
       expect(result.exitCode).toBe(0);
 
@@ -192,7 +192,7 @@ describe("subcommand integration tests", () => {
   describe("direct URL usage", () => {
     it("should work with direct URL command", async () => {
       const result =
-        await $`${fcrawlPath} https://example.com --limit 1 -o ${testOutputDir} --api-url http://localhost:33002`.quiet();
+        await $`${fcrawlPath} https://example.com --limit 1 -o ${testOutputDir} --api-url http://localhost:3002`.quiet();
 
       expect(result.exitCode).toBe(0);
       // Skip file checks due to Firecrawl's link discovery issues
@@ -200,7 +200,7 @@ describe("subcommand integration tests", () => {
 
     it("should support new crawl options", async () => {
       const result =
-        await $`${fcrawlPath} https://example.com --limit 1 --ignore-robots-txt -o ${testOutputDir} --api-url http://localhost:33002`.quiet();
+        await $`${fcrawlPath} https://example.com --limit 1 --ignore-robots-txt -o ${testOutputDir} --api-url http://localhost:3002`.quiet();
 
       expect(result.exitCode).toBe(0);
       // Skip file checks due to Firecrawl's link discovery issues

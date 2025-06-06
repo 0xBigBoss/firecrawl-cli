@@ -17,9 +17,9 @@ bun typecheck           # TypeScript type checking
 # Testing
 bun test                # Run all tests
 bun test:isolated       # Run tests in isolation (REQUIRED for reliable results)
-bun test:unit           # Run unit tests only (excludes Firecrawl health checks)
+bun test:unit           # Run unit tests only (excludes integration tests)
 bun test:health         # Run Firecrawl connectivity tests
-bun test:ci:linux       # CI command for Linux (unit + health tests)
+bun test:ci:linux       # CI command for Linux (unit + health + subcommands integration tests)
 bun test:ci:other       # CI command for macOS/Windows (unit tests only)
 bun test:watch          # Run tests in watch mode
 bun test:coverage       # Run tests with coverage
