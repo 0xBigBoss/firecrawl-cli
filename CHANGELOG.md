@@ -1,5 +1,11 @@
 # fcrawl
 
+## 0.0.4
+
+### Patch Changes
+
+- [`ca9d991`](https://github.com/0xBigBoss/firecrawl-cli/commit/ca9d99176786ec6e31a8919a99a429559e033a13) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Fix binary attachment to GitHub releases by using changesets outputs instead of tag triggers in workflow
+
 ## 0.0.3
 
 ### Patch Changes
