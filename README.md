@@ -1,4 +1,4 @@
-# firecrawl-crawl
+# firecrawl-cli
 
 A versatile web crawler and scraper that uses the [Firecrawl API](https://firecrawl.dev/docs/api) to crawl websites, scrape individual pages, and discover site URLs, saving content as Markdown files while maintaining the site's directory structure.
 
