@@ -35,7 +35,7 @@ jobs:
           docker compose up -d
           # Wait for Firecrawl API to be ready
           echo "Waiting for Firecrawl API to be ready..."
-          timeout 60 bash -c 'until curl -sf http://localhost:3002/health; do echo -n "."; sleep 2; done' || (docker compose logs && exit 1)
+          timeout 300 bash -c 'until curl -sf http://localhost:3002/health; do echo -n "."; sleep 2; done' || (docker compose logs && exit 1)
           echo " Ready!"
           echo "Firecrawl API is running at http://localhost:3002"
 
