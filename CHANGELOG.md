@@ -1,5 +1,11 @@
 # fcrawl
 
+## 0.0.3
+
+### Patch Changes
+
+- [`094cf11`](https://github.com/0xBigBoss/firecrawl-cli/commit/094cf11f77e6ac03bd2851a5510a3608142ecd0e) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Bump
+
 ## 0.0.2
 
 ### Patch Changes
