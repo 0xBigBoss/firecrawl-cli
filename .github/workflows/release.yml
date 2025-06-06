@@ -2,15 +2,17 @@ name: Release
 
 on:
   push:
-    branches: [main]
+    branches: [main]  # For changesets version management
+    tags: ["v*"]      # For building and releasing binaries
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  release:
-    if: github.repository_owner == '0xbigboss'
+  # Version management job (runs on main branch pushes)
+  version:
+    if: github.ref == 'refs/heads/main' && github.repository_owner == '0xbigboss'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,3 +36,102 @@ jobs:
           publish: bun run release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Build job (runs on tag pushes)
+  build:
+    if: startsWith(github.ref, 'refs/tags/v')
+    name: Build for ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          # Linux x64
+          - os: ubuntu-latest
+            target: linux-x64
+            build_target: bun-linux-x64
+
+          # Linux ARM64
+          - os: ubuntu-latest
+            target: linux-arm64
+            build_target: bun-linux-arm64
+
+          # macOS x64
+          - os: macos-latest
+            target: darwin-x64
+            build_target: bun-darwin-x64
+
+          # macOS ARM64 (Apple Silicon)
+          - os: macos-latest
+            target: darwin-arm64
+            build_target: bun-darwin-arm64
+
+          # Windows x64
+          - os: windows-latest
+            target: windows-x64
+            build_target: bun-windows-x64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build executable
+        run: |
+          bun build ./index.ts --compile --target=${{ matrix.build_target }} --outfile ./bin/fcrawl-${{ matrix.target }}
+        shell: bash
+
+      - name: Add .exe extension for Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          mv ./bin/fcrawl-${{ matrix.target }} ./bin/fcrawl-${{ matrix.target }}.exe
+        shell: bash
+
+      - name: Create archive
+        run: |
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            cd bin && 7z a fcrawl-${{ matrix.target }}.zip fcrawl-${{ matrix.target }}.exe
+          else
+            cd bin && tar -czf fcrawl-${{ matrix.target }}.tar.gz fcrawl-${{ matrix.target }}
+          fi
+        shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcrawl-${{ matrix.target }}
+          path: bin/fcrawl-${{ matrix.target }}.*
+
+  # Release job (runs on tag pushes, after build completes)
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display artifact structure
+        run: find artifacts -type f
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            artifacts/fcrawl-linux-x64/*
+            artifacts/fcrawl-linux-arm64/*
+            artifacts/fcrawl-darwin-x64/*
+            artifacts/fcrawl-darwin-arm64/*
+            artifacts/fcrawl-windows-x64/*
