@@ -89,10 +89,20 @@ jobs:
           bun build ./index.ts --compile --target=${{ matrix.build_target }} --outfile ./bin/fcrawl-${{ matrix.target }}
         shell: bash
 
-      - name: Add .exe extension for Windows
+      - name: Verify Windows executable extension
         if: matrix.os == 'windows-latest'
         run: |
-          mv ./bin/fcrawl-${{ matrix.target }} ./bin/fcrawl-${{ matrix.target }}.exe
+          # Bun automatically adds .exe extension on Windows, so just verify it exists
+          if [ ! -f "./bin/fcrawl-${{ matrix.target }}.exe" ]; then
+            echo "Expected .exe file not found, checking for file without extension..."
+            if [ -f "./bin/fcrawl-${{ matrix.target }}" ]; then
+              mv "./bin/fcrawl-${{ matrix.target }}" "./bin/fcrawl-${{ matrix.target }}.exe"
+            else
+              echo "Error: No executable found!"
+              exit 1
+            fi
+          fi
+          echo "Windows executable ready: ./bin/fcrawl-${{ matrix.target }}.exe"
         shell: bash
 
       - name: Create archive
