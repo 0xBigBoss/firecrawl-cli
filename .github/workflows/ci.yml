@@ -45,12 +45,20 @@ jobs:
           echo "Checking Playwright service..."
           timeout 120 bash -c 'until curl -sf http://localhost:3000/health 2>/dev/null || docker compose logs playwright-service | grep -q "listening"; do echo -n "."; sleep 2; done' || true
           
-          # Wait for API with longer timeout and better error handling
+          # Wait for API with multiple endpoint checks and simpler validation
           echo "Waiting for Firecrawl API to be ready..."
-          timeout 420 bash -c 'until curl -sf http://localhost:3002/health 2>/dev/null; do echo -n "."; sleep 3; done' || {
-            echo "API health check failed. Showing logs:"
-            docker compose logs api
-            docker compose logs worker  
+          timeout 420 bash -c 'until [[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:3002/ 2>/dev/null) =~ ^(200|404|405)$ ]] || [[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:3002/health 2>/dev/null) =~ ^(200|404)$ ]]; do echo -n "."; sleep 3; done' || {
+            echo "API health check failed. Showing detailed logs:"
+            echo "=== Direct curl test ==="
+            curl -v http://localhost:3002/ || true
+            echo "=== API Container Logs ==="
+            docker compose logs api | tail -50
+            echo "=== Worker Container Logs ==="
+            docker compose logs worker | tail -20
+            echo "=== Container Status ==="
+            docker compose ps
+            echo "=== Port Check ==="
+            netstat -tlnp | grep 3002 || true
             exit 1
           }
           echo " Ready!"
