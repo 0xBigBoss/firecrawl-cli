@@ -127,7 +127,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fcrawl-${{ matrix.target }}
-          path: bin/fcrawl-${{ matrix.target }}.*
+          path: |
+            bin/fcrawl-${{ matrix.target }}.tar.gz
+            bin/fcrawl-${{ matrix.target }}.zip
 
   # Release job (runs only if changesets published and build succeeded)
   release:
