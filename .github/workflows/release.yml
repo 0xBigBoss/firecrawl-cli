@@ -106,7 +106,11 @@ jobs:
 
       - name: Test executable
         run: |
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          # Only test native binaries (skip cross-compiled ones)
+          if [[ "${{ matrix.target }}" == "linux-arm64" ]]; then
+            echo "Skipping test for cross-compiled ARM64 binary on x64 runner"
+            echo "Binary exists: $(ls -la ./bin/fcrawl-${{ matrix.target }})"
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             ./bin/fcrawl-${{ matrix.target }}.exe --version
           else
             ./bin/fcrawl-${{ matrix.target }} --version
