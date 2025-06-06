@@ -1,5 +1,22 @@
 # fcrawl
 
+## 0.1.0
+
+### Minor Changes
+
+- [`734644e`](https://github.com/0xBigBoss/firecrawl-cli/commit/734644e836571413c09a7d8b6c08303baf6f08a5) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Prepare repository for open source release
+
+  - Update repository URLs to use 0xBigBoss username
+  - Enhance CONTRIBUTING.md with comprehensive development guidelines
+  - Disable macOS releases temporarily until code signing is implemented
+  - Add QuickStart build instructions to README
+  - Improve CI Docker integration tests with better health checks and timeouts
+  - Ensure all documentation is accurate and complete for public release
+
+### Patch Changes
+
+- [`130632d`](https://github.com/0xBigBoss/firecrawl-cli/commit/130632da650e696aa8bd159e8ad04491b794caad) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Fix duplicate Windows artifacts by uploading only archives, not raw executables
+
 ## 0.0.5
 
 ### Patch Changes
