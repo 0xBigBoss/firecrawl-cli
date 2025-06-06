@@ -1,6 +1,6 @@
 {
   "name": "fcrawl",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Web crawler using Firecrawl API that saves pages as local Markdown files",
   "module": "index.ts",
   "type": "module",
