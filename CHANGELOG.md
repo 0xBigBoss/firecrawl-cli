@@ -1,5 +1,15 @@
 # fcrawl
 
+## 0.1.1
+
+### Patch Changes
+
+- [`850fa5e`](https://github.com/0xBigBoss/firecrawl-cli/commit/850fa5eb628cb8a9efb182c3120370dcf0a2515f) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Fix release build workflow for cross-compiled binaries
+
+  Resolves issue where ARM64 Linux binaries could not be tested on x64 runners,
+  causing release builds to fail. Now properly skips testing cross-compiled
+  binaries while ensuring they are still built and packaged correctly.
+
 ## 0.1.0
 
 ### Minor Changes
