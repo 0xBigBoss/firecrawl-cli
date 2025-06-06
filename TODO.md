@@ -200,6 +200,7 @@ sudo spctl --master-enable   # Re-enable
 
 ## Future Enhancements
 
+- [ ] **PRIORITY**: Enable macOS builds in release workflow after implementing code signing
 - [ ] Implement notarization for additional security
 - [ ] Add automated certificate expiration monitoring
 - [ ] Create separate certificates for different distribution channels

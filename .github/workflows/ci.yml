@@ -33,9 +33,26 @@ jobs:
         run: |
           cp .env.ci .env
           docker compose up -d
-          # Wait for Firecrawl API to be ready
+          
+          # Wait for services to be ready with better logging
+          echo "Waiting for services to start..."
+          sleep 10
+          
+          # Check individual services first
+          echo "Checking Redis..."
+          timeout 60 bash -c 'until docker compose exec redis redis-cli ping; do echo -n "."; sleep 2; done' || true
+          
+          echo "Checking Playwright service..."
+          timeout 120 bash -c 'until curl -sf http://localhost:3000/health 2>/dev/null || docker compose logs playwright-service | grep -q "listening"; do echo -n "."; sleep 2; done' || true
+          
+          # Wait for API with longer timeout and better error handling
           echo "Waiting for Firecrawl API to be ready..."
-          timeout 300 bash -c 'until curl -sf http://localhost:3002/health; do echo -n "."; sleep 2; done' || (docker compose logs && exit 1)
+          timeout 420 bash -c 'until curl -sf http://localhost:3002/health 2>/dev/null; do echo -n "."; sleep 3; done' || {
+            echo "API health check failed. Showing logs:"
+            docker compose logs api
+            docker compose logs worker  
+            exit 1
+          }
           echo " Ready!"
           echo "Firecrawl API is running at http://localhost:3002"
 

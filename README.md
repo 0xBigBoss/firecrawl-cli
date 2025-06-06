@@ -21,9 +21,11 @@ All commands:
 
 ## Installation
 
+### Quick Start
+
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/firecrawl-crawl.git
+git clone https://github.com/0xBigBoss/firecrawl-crawl.git
 cd firecrawl-crawl
 
 # Install dependencies
@@ -31,7 +33,21 @@ bun install
 
 # Build the executable
 bun run build
+
+# Run the tool
+./bin/fcrawl --version
 ```
+
+### Download Pre-built Binaries
+
+Download the latest release for your platform from [GitHub Releases](https://github.com/0xBigBoss/firecrawl-crawl/releases).
+
+Available platforms:
+- Linux x64 (`fcrawl-linux-x64.tar.gz`)
+- Linux ARM64 (`fcrawl-linux-arm64.tar.gz`)  
+- Windows x64 (`fcrawl-windows-x64.zip`)
+
+> **Note**: macOS binaries are temporarily disabled until code signing is implemented. Build from source on macOS for now.
 
 ## Configuration
 

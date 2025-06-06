@@ -58,15 +58,14 @@ jobs:
             target: linux-arm64
             build_target: bun-linux-arm64
 
-          # macOS x64
-          - os: macos-latest
-            target: darwin-x64
-            build_target: bun-darwin-x64
-
-          # macOS ARM64 (Apple Silicon)
-          - os: macos-latest
-            target: darwin-arm64
-            build_target: bun-darwin-arm64
+          # macOS builds disabled until code signing is implemented
+          # See TODO.md for code signing setup instructions
+          # - os: macos-latest
+          #   target: darwin-x64
+          #   build_target: bun-darwin-x64
+          # - os: macos-latest
+          #   target: darwin-arm64
+          #   build_target: bun-darwin-arm64
 
           # Windows x64
           - os: windows-latest
@@ -160,6 +159,4 @@ jobs:
           files: |
             artifacts/fcrawl-linux-x64/*
             artifacts/fcrawl-linux-arm64/*
-            artifacts/fcrawl-darwin-x64/*
-            artifacts/fcrawl-darwin-arm64/*
             artifacts/fcrawl-windows-x64/*
