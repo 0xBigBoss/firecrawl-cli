@@ -105,6 +105,15 @@ jobs:
           echo "Windows executable ready: ./bin/fcrawl-${{ matrix.target }}.exe"
         shell: bash
 
+      - name: Test executable
+        run: |
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            ./bin/fcrawl-${{ matrix.target }}.exe --version
+          else
+            ./bin/fcrawl-${{ matrix.target }} --version
+          fi
+        shell: bash
+
       - name: Create archive
         run: |
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
