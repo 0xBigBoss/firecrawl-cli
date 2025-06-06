@@ -27,7 +27,10 @@ bun test:coverage       # Run tests with coverage
 # Linting & Formatting
 bun lint                # Run Biome linter and tsgo
 bun lint:fix            # Auto-fix linting issues
-bun format              # Format code with Biome
+bun format              # Format code with Biome (normalizes line endings)
+
+# Note: Line endings are enforced as LF across all platforms via .gitattributes
+# Always run `bun format` before committing to ensure consistent formatting
 
 # Run specific test file (when debugging mock conflicts)
 bun test tests/crawler.test.ts
