@@ -54,10 +54,17 @@ jobs:
         run: bun lint
 
       - name: Run tests
-        run: bun test:isolated
+        run: |
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            echo "Running full test suite with Firecrawl connectivity tests"
+            bun run test:ci:linux
+          else
+            echo "Running unit tests only (Docker not available on ${{ runner.os }})"
+            bun run test:ci:other
+          fi
+        shell: bash
         env:
           # Only set API URL on Linux where Firecrawl is actually running
-          # Other platforms will use mocked API in tests
           FIRECRAWL_API_URL: ${{ runner.os == 'Linux' && 'http://localhost:3002' || '' }}
           CI: true
 
