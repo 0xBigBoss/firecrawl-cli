@@ -1,5 +1,24 @@
 # fcrawl
 
+## 0.2.0
+
+### Minor Changes
+
+- [`5f80d11`](https://github.com/0xBigBoss/firecrawl-cli/commit/5f80d11974264a7757423d4ffaf45293387cea83) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Enable macOS and Windows builds with code signing
+
+  Implement complete macOS code signing workflow using Apple Developer certificates
+  and re-enable macOS and Windows builds in the release pipeline. This provides
+  signed executables for all major platforms (Linux, macOS, Windows) and eliminates
+  Gatekeeper warnings on macOS systems.
+
+  Features:
+
+  - Add macOS code signing with entitlements for Bun JIT requirements
+  - Re-enable macOS builds (x64 and ARM64) in release workflow
+  - Maintain Windows build support
+  - Automated certificate verification and Gatekeeper assessment
+  - Complete multi-platform binary distribution
+
 ## 0.1.1
 
 ### Patch Changes
