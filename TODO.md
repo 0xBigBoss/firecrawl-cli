@@ -198,9 +198,14 @@ sudo spctl --master-enable   # Re-enable
 4. **Verification**: Always verify signing success in workflow
 5. **Testing**: Test signed executables on clean systems
 
+## Implementation Status
+
+- [x] **COMPLETED**: Enable macOS builds in release workflow with code signing implementation
+- [x] **COMPLETED**: Add code signing workflow steps for macOS executables
+- [x] **COMPLETED**: Re-enable macOS and Windows builds in GitHub Actions
+
 ## Future Enhancements
 
-- [ ] **PRIORITY**: Enable macOS builds in release workflow after implementing code signing
 - [ ] Implement notarization for additional security
 - [ ] Add automated certificate expiration monitoring
 - [ ] Create separate certificates for different distribution channels

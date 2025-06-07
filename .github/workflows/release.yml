@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: [main]  # For changesets version management and building/releasing
+    branches: [main] # For changesets version management and building/releasing
 
 permissions:
   contents: write
@@ -58,14 +58,15 @@ jobs:
             target: linux-arm64
             build_target: bun-linux-arm64
 
-          # macOS builds disabled until code signing is implemented
-          # See TODO.md for code signing setup instructions
-          # - os: macos-latest
-          #   target: darwin-x64
-          #   build_target: bun-darwin-x64
-          # - os: macos-latest
-          #   target: darwin-arm64
-          #   build_target: bun-darwin-arm64
+          # macOS x64
+          - os: macos-latest
+            target: darwin-x64
+            build_target: bun-darwin-x64
+
+          # macOS ARM64
+          - os: macos-latest
+            target: darwin-arm64
+            build_target: bun-darwin-arm64
 
           # Windows x64
           - os: windows-latest
@@ -87,6 +88,27 @@ jobs:
         run: |
           bun build ./index.ts --compile --target=${{ matrix.build_target }} --outfile ./bin/fcrawl-${{ matrix.target }}
         shell: bash
+
+      - name: Import Code Signing Certificate
+        if: matrix.os == 'macos-latest'
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.MACOS_CERTIFICATE_P12 }}
+          p12-password: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+
+      - name: Code Sign macOS Executable
+        if: matrix.os == 'macos-latest'
+        run: |
+          codesign --deep --force -vvvv \
+            --sign "${{ secrets.MACOS_SIGNING_IDENTITY }}" \
+            --entitlements entitlements.plist \
+            ./bin/fcrawl-${{ matrix.target }}
+
+          # Verify signing
+          codesign -vvv --verify ./bin/fcrawl-${{ matrix.target }}
+
+          # Check Gatekeeper status
+          spctl -a -vvv ./bin/fcrawl-${{ matrix.target }}
 
       - name: Verify Windows executable extension
         if: matrix.os == 'windows-latest'
@@ -163,4 +185,6 @@ jobs:
           files: |
             artifacts/fcrawl-linux-x64/*
             artifacts/fcrawl-linux-arm64/*
+            artifacts/fcrawl-darwin-x64/*
+            artifacts/fcrawl-darwin-arm64/*
             artifacts/fcrawl-windows-x64/*
