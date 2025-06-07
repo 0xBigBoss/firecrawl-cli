@@ -1,5 +1,11 @@
 # fcrawl
 
+## 0.2.5
+
+### Patch Changes
+
+- [`820758b`](https://github.com/0xBigBoss/firecrawl-cli/commit/820758b0084eeb7783f162976e5e78258f1d3474) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Fix darwin code signing
+
 ## 0.2.4
 
 ### Patch Changes
