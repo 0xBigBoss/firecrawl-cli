@@ -1,5 +1,16 @@
 # fcrawl
 
+## 0.2.1
+
+### Patch Changes
+
+- [`4ecc836`](https://github.com/0xBigBoss/firecrawl-cli/commit/4ecc83641f90b345aaf117e82ff168d00df8a450) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Fix macOS code signing workflow by removing Gatekeeper check
+
+  Remove the `spctl` Gatekeeper assessment that was causing macOS builds to fail.
+  The binary is still properly code-signed for security, but the Gatekeeper check
+  requires notarization which is not currently implemented. Users can run the
+  signed binary by right-clicking and selecting "Open" to bypass Gatekeeper warnings.
+
 ## 0.2.0
 
 ### Minor Changes
