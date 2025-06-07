@@ -1,5 +1,11 @@
 # fcrawl
 
+## 0.2.3
+
+### Patch Changes
+
+- [`eff0e3b`](https://github.com/0xBigBoss/firecrawl-cli/commit/eff0e3b878f636f8da543e426bab902a82780741) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Fix release with notarization for darwin
+
 ## 0.2.2
 
 ### Patch Changes
