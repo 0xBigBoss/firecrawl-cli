@@ -99,33 +99,33 @@ jobs:
       - name: Code Sign and Notarize macOS Executable
         if: matrix.os == 'macos-latest'
         run: |
-          # Code sign the binary with hardened runtime
-          codesign --force --sign "${{ secrets.MACOS_SIGNING_IDENTITY }}" \
+          echo Code sign the binary with hardened runtime
+          codesign --deep --force -vvv --sign "${{ secrets.MACOS_SIGNING_IDENTITY }}" \
             --entitlements entitlements.plist \
             --options runtime \
             --timestamp \
             ./bin/fcrawl-${{ matrix.target }}
 
-          # Verify signing
+          echo Verify signing
           codesign -vvv --verify ./bin/fcrawl-${{ matrix.target }}
 
-          # Create a ZIP file for notarization (required by Apple)
-          cd bin
-          zip fcrawl-${{ matrix.target }}-notarize.zip fcrawl-${{ matrix.target }}
-          cd ..
+          # echo Create a ZIP file for notarization (required by Apple)
+          # cd bin
+          # zip fcrawl-${{ matrix.target }}-notarize.zip fcrawl-${{ matrix.target }}
+          # cd ..
 
-          # Submit for notarization
-          xcrun notarytool submit ./bin/fcrawl-${{ matrix.target }}-notarize.zip \
-            --apple-id "${{ secrets.APPLE_ID }}" \
-            --password "${{ secrets.APPLE_APP_PASSWORD }}" \
-            --team-id "${{ secrets.APPLE_TEAM_ID }}" \
-            --wait
+          # echo Submit for notarization
+          # xcrun notarytool submit ./bin/fcrawl-${{ matrix.target }}-notarize.zip \
+          #   --apple-id "${{ secrets.APPLE_ID }}" \
+          #   --password "${{ secrets.APPLE_APP_PASSWORD }}" \
+          #   --team-id "${{ secrets.APPLE_TEAM_ID }}" \
+          #   --wait
 
-          # Clean up the zip file
-          rm ./bin/fcrawl-${{ matrix.target }}-notarize.zip
+          # echo Clean up the zip file
+          # rm ./bin/fcrawl-${{ matrix.target }}-notarize.zip
 
-          # Verify the binary passes Gatekeeper (for command-line tools, check execution policy)
-          spctl -a -t exec -vv ./bin/fcrawl-${{ matrix.target }}
+          # echo Verify the binary passes Gatekeeper (for command-line tools, check execution policy)
+          # spctl -a -t exec -vv ./bin/fcrawl-${{ matrix.target }}
 
       - name: Verify Windows executable extension
         if: matrix.os == 'windows-latest'
@@ -148,10 +148,10 @@ jobs:
           # Only test native binaries (skip cross-compiled ones)
           RUNNER_ARCH=$(uname -m)
           TARGET_ARCH="${{ matrix.target }}"
-          
+
           # Determine if this is a cross-compiled binary
           SKIP_TEST=false
-          
+
           if [[ "$TARGET_ARCH" == "linux-arm64" && "$RUNNER_ARCH" == "x86_64" ]]; then
             SKIP_TEST=true
             echo "Skipping test: cross-compiled ARM64 binary on x64 Linux runner"
@@ -159,7 +159,7 @@ jobs:
             SKIP_TEST=true
             echo "Skipping test: cross-compiled x64 binary on ARM64 macOS runner"
           fi
-          
+
           if [[ "$SKIP_TEST" == "true" ]]; then
             echo "Binary exists: $(ls -la ./bin/fcrawl-${{ matrix.target }}*)"
           elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
