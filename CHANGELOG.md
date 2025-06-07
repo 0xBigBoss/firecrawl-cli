@@ -1,5 +1,11 @@
 # fcrawl
 
+## 0.2.4
+
+### Patch Changes
+
+- [`3fb433d`](https://github.com/0xBigBoss/firecrawl-cli/commit/3fb433d5e6bb13d9ba54f488571cb60a8b1dceef) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Fix darwin verification for executables
+
 ## 0.2.3
 
 ### Patch Changes
