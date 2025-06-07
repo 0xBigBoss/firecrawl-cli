@@ -96,19 +96,36 @@ jobs:
           p12-file-base64: ${{ secrets.MACOS_CERTIFICATE_P12 }}
           p12-password: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
 
-      - name: Code Sign macOS Executable
+      - name: Code Sign and Notarize macOS Executable
         if: matrix.os == 'macos-latest'
         run: |
-          codesign --deep --force -vvvv \
-            --sign "${{ secrets.MACOS_SIGNING_IDENTITY }}" \
+          # Code sign the binary with hardened runtime
+          codesign --force --sign "${{ secrets.MACOS_SIGNING_IDENTITY }}" \
             --entitlements entitlements.plist \
+            --options runtime \
+            --timestamp \
             ./bin/fcrawl-${{ matrix.target }}
 
           # Verify signing
           codesign -vvv --verify ./bin/fcrawl-${{ matrix.target }}
 
-          # Note: Gatekeeper check (spctl) requires notarization, which is not implemented
-          # The binary is properly code-signed for security and will run with user approval
+          # Create a ZIP file for notarization (required by Apple)
+          cd bin
+          zip fcrawl-${{ matrix.target }}-notarize.zip fcrawl-${{ matrix.target }}
+          cd ..
+
+          # Submit for notarization
+          xcrun notarytool submit ./bin/fcrawl-${{ matrix.target }}-notarize.zip \
+            --apple-id "${{ secrets.APPLE_ID }}" \
+            --password "${{ secrets.APPLE_APP_PASSWORD }}" \
+            --team-id "${{ secrets.APPLE_TEAM_ID }}" \
+            --wait
+
+          # Clean up the zip file
+          rm ./bin/fcrawl-${{ matrix.target }}-notarize.zip
+
+          # Verify the binary passes Gatekeeper
+          spctl -a -vv ./bin/fcrawl-${{ matrix.target }}
 
       - name: Verify Windows executable extension
         if: matrix.os == 'windows-latest'
