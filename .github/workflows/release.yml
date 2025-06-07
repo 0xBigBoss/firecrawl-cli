@@ -124,8 +124,8 @@ jobs:
           # Clean up the zip file
           rm ./bin/fcrawl-${{ matrix.target }}-notarize.zip
 
-          # Verify the binary passes Gatekeeper
-          spctl -a -vv ./bin/fcrawl-${{ matrix.target }}
+          # Verify the binary passes Gatekeeper (for command-line tools, check execution policy)
+          spctl -a -t exec -vv ./bin/fcrawl-${{ matrix.target }}
 
       - name: Verify Windows executable extension
         if: matrix.os == 'windows-latest'
