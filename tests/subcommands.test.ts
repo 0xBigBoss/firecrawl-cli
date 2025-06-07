@@ -69,18 +69,41 @@ describe("subcommand integration tests", () => {
       // Verify content
       const content = await readFile(expectedPath, "utf-8");
       expect(content).toContain("Example Domain");
-    });
+    }, 10000); // 10 second timeout
 
     it("should scrape multiple URLs", async () => {
       const result =
         await $`${fcrawlPath} scrape https://example.com https://example.com/test -o ${testOutputDir} --api-url ${firecrawlApiUrl}`.quiet();
 
+      // Debug output on failure
+      if (result.exitCode !== 0) {
+        console.error("Command failed with exit code:", result.exitCode);
+        console.error("STDOUT:", result.stdout.toString());
+        console.error("STDERR:", result.stderr.toString());
+      }
+
       expect(result.exitCode).toBe(0);
 
       // Check that both files were created
-      expect(existsSync(join(testOutputDir, "example.com", "index.md"))).toBe(true);
-      expect(existsSync(join(testOutputDir, "example.com", "test.md"))).toBe(true);
-    });
+      const indexPath = join(testOutputDir, "example.com", "index.md");
+      const testPath = join(testOutputDir, "example.com", "test.md");
+
+      if (!existsSync(indexPath)) {
+        console.error("Index file not found at:", indexPath);
+        const { stdout } = await $`find ${testOutputDir} -name "*.md" 2>/dev/null || true`.quiet();
+        console.error("Markdown files found:", stdout.toString());
+      }
+
+      if (!existsSync(testPath)) {
+        console.error("Test file not found at:", testPath);
+        const { stdout } =
+          await $`ls -la ${testOutputDir}/example.com/ 2>/dev/null || echo "Directory not found"`.quiet();
+        console.error("Contents of example.com dir:", stdout.toString());
+      }
+
+      expect(existsSync(indexPath)).toBe(true);
+      expect(existsSync(testPath)).toBe(true);
+    }, 15000); // Increased timeout to 15 seconds
 
     it("should handle multiple formats", async () => {
       const result =
@@ -102,7 +125,7 @@ describe("subcommand integration tests", () => {
       }
 
       expect(existsSync(join(testOutputDir, "example.com", "index.html"))).toBe(true);
-    });
+    }, 10000); // 10 second timeout
 
     it("should show help for scrape command", async () => {
       const result = await $`${fcrawlPath} scrape --help`.quiet();
