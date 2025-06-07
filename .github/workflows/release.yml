@@ -129,12 +129,27 @@ jobs:
       - name: Test executable
         run: |
           # Only test native binaries (skip cross-compiled ones)
-          if [[ "${{ matrix.target }}" == "linux-arm64" ]]; then
-            echo "Skipping test for cross-compiled ARM64 binary on x64 runner"
-            echo "Binary exists: $(ls -la ./bin/fcrawl-${{ matrix.target }})"
+          RUNNER_ARCH=$(uname -m)
+          TARGET_ARCH="${{ matrix.target }}"
+          
+          # Determine if this is a cross-compiled binary
+          SKIP_TEST=false
+          
+          if [[ "$TARGET_ARCH" == "linux-arm64" && "$RUNNER_ARCH" == "x86_64" ]]; then
+            SKIP_TEST=true
+            echo "Skipping test: cross-compiled ARM64 binary on x64 Linux runner"
+          elif [[ "$TARGET_ARCH" == "darwin-x64" && "$RUNNER_ARCH" == "arm64" ]]; then
+            SKIP_TEST=true
+            echo "Skipping test: cross-compiled x64 binary on ARM64 macOS runner"
+          fi
+          
+          if [[ "$SKIP_TEST" == "true" ]]; then
+            echo "Binary exists: $(ls -la ./bin/fcrawl-${{ matrix.target }}*)"
           elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            echo "Testing Windows executable..."
             ./bin/fcrawl-${{ matrix.target }}.exe --version
           else
+            echo "Testing native executable..."
             ./bin/fcrawl-${{ matrix.target }} --version
           fi
         shell: bash
