@@ -43,3 +43,5 @@ test-crawls/
 
 # Claude Code
 .claude/settings.local.json
+
+*.p12
