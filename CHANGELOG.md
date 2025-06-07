@@ -1,5 +1,11 @@
 # fcrawl
 
+## 0.2.2
+
+### Patch Changes
+
+- [`aaec697`](https://github.com/0xBigBoss/firecrawl-cli/commit/aaec6978794b69fd03beda44c69735d41b52e1b4) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Fix failing release
+
 ## 0.2.1
 
 ### Patch Changes
