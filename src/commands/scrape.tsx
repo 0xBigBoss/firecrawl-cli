@@ -1,7 +1,7 @@
 import { Text, useApp } from "ink";
 import React from "react";
 import type { ScrapeOptions } from "../schemas/cli";
-import { scrape } from "../scraper";
+import { type ScrapeResult, scrape } from "../scraper";
 
 type Props = {
   args: [string[]];
@@ -28,6 +28,7 @@ type Props = {
 export default function ScrapeCommand({ args: [urls], options }: Props) {
   const [status, setStatus] = React.useState("Initializing...");
   const [error, setError] = React.useState<string | null>(null);
+  const [result, setResult] = React.useState<ScrapeResult | null>(null);
   const app = useApp();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: CLI runs once and exits
@@ -51,12 +52,15 @@ export default function ScrapeCommand({ args: [urls], options }: Props) {
           version: false,
         };
 
-        await scrape(urls, scrapeOptions);
+        const scrapeResult = await scrape(urls, scrapeOptions);
+        setResult(scrapeResult);
+
         if (options.verbose) {
           setStatus(`Successfully scraped ${urls.length} URL(s)`);
         } else {
-          setStatus(""); // Hide status in non-verbose mode
+          setStatus(""); // Hide status in non-verbose mode to show summary instead
         }
+
         app.exit();
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -70,6 +74,16 @@ export default function ScrapeCommand({ args: [urls], options }: Props) {
 
   if (error) {
     return <Text color="red">Error: {error}</Text>;
+  }
+
+  // Show result summary in non-verbose mode
+  if (result && !options.verbose) {
+    return (
+      <Text color="green">
+        Scraped {result.successCount}/{result.totalUrls} URLs
+        {result.errorCount > 0 ? ` (${result.errorCount} errors)` : ""}
+      </Text>
+    );
   }
 
   return status ? <Text color="green">{status}</Text> : null;

@@ -12,7 +12,13 @@ export interface ScraperConfig {
   outputDir: string;
 }
 
-export async function scrape(urls: string[], options: ScrapeOptions): Promise<void> {
+export interface ScrapeResult {
+  successCount: number;
+  errorCount: number;
+  totalUrls: number;
+}
+
+export async function scrape(urls: string[], options: ScrapeOptions): Promise<ScrapeResult> {
   log("Starting scrape of %d URLs", urls.length);
   log("Options: %o", options);
 
@@ -157,16 +163,10 @@ export async function scrape(urls: string[], options: ScrapeOptions): Promise<vo
     }
   }
 
-  // Summary - always show in non-verbose mode for final results
-  if (!isVerboseEnabled()) {
-    console.log(
-      `Scraped ${successCount}/${urls.length} URLs${errorCount > 0 ? ` (${errorCount} errors)` : ""}`,
-    );
-  } else {
-    console.log("\nScrape completed!");
-    console.log(`Success: ${successCount}/${urls.length}`);
-    if (errorCount > 0) {
-      console.log(`Errors: ${errorCount}`);
-    }
-  }
+  // Return results instead of printing directly
+  return {
+    successCount,
+    errorCount,
+    totalUrls: urls.length,
+  };
 }
