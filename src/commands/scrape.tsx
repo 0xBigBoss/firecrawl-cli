@@ -39,9 +39,7 @@ export default function ScrapeCommand({ args: [urls], options }: Props) {
           throw new Error("No URLs provided");
         }
 
-        if (options.verbose) {
-          setStatus(`Scraping ${urls.length} URL(s)...`);
-        }
+        setStatus(`Scraping ${urls.length} URL(s)...`);
 
         const scrapeOptions: ScrapeOptions = {
           command: "scrape",
@@ -61,7 +59,7 @@ export default function ScrapeCommand({ args: [urls], options }: Props) {
           setStatus(""); // Hide status in non-verbose mode to show summary instead
         }
 
-        app.exit();
+        setTimeout(() => app.exit(), 1);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         setError(msg);
