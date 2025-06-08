@@ -79,10 +79,22 @@ export default function ScrapeCommand({ args: [urls], options }: Props) {
   // Show result summary in non-verbose mode
   if (result && !options.verbose) {
     return (
-      <Text color="green">
-        Scraped {result.successCount}/{result.totalUrls} URLs
-        {result.errorCount > 0 ? ` (${result.errorCount} errors)` : ""}
-      </Text>
+      <>
+        <Text color="green">
+          Scraped {result.successCount}/{result.totalUrls} URLs
+          {result.errorCount > 0 ? ` (${result.errorCount} errors)` : ""}
+        </Text>
+        {result.errors.length > 0 && (
+          <>
+            <Text color="red">Errors:</Text>
+            {result.errors.map((error) => (
+              <Text key={error.url} color="red">
+                ✗ {error.message}
+              </Text>
+            ))}
+          </>
+        )}
+      </>
     );
   }
 

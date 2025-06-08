@@ -1,3 +1,4 @@
+import { handleError } from "./error-formatter";
 import { createFirecrawlApp } from "./libs/firecrawl-client";
 import { loggers } from "./logger";
 import type { CrawlOptions } from "./schemas/cli";
@@ -136,8 +137,8 @@ export async function crawl(url: string, options: CrawlerOptions): Promise<void>
       console.log(`Crawled ${savedCount} pages`);
     }
   } catch (error) {
-    loggers.error("Crawl failed: %o", error);
-    console.error("Crawl failed:", error);
-    throw error;
+    const errorMessage = handleError(error, url, "crawl");
+    console.error(errorMessage);
+    throw new Error(errorMessage);
   }
 }

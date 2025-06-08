@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { handleError } from "./error-formatter";
 import { createFirecrawlApp } from "./libs/firecrawl-client";
 import { loggers } from "./logger";
 import type { MapOptions } from "./schemas/cli";
@@ -150,7 +151,8 @@ export async function map(url: string, options: MapOptions): Promise<void> {
       console.log("\nMap completed successfully!");
     }
   } catch (error) {
-    loggers.error("Map failed: %o", error);
-    console.error("Map failed:", error);
+    const errorMessage = handleError(error, url, "map");
+    console.error(errorMessage);
+    throw new Error(errorMessage);
   }
 }

@@ -192,8 +192,10 @@ describe("mapper", () => {
         includeSubdomains: false,
       };
 
-      // Should not throw
-      await expect(map(options.url, options)).resolves.toBeUndefined();
+      // Should throw with detailed error message
+      await expect(map(options.url, options)).rejects.toThrow(
+        "Failed to process https://error.com",
+      );
       expect(mockWriteFile).not.toHaveBeenCalled();
     });
 

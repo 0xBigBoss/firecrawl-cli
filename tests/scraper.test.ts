@@ -216,8 +216,13 @@ describe("scraper", () => {
         screenshot: false,
       };
 
-      // Should not throw, but log error
-      await expect(scrape(options.urls, options)).resolves.toBeUndefined();
+      // Should not throw, but return error results
+      const result = await scrape(options.urls, options);
+      expect(result.successCount).toBe(0);
+      expect(result.errorCount).toBe(1);
+      expect(result.totalUrls).toBe(1);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]?.url).toBe("https://error.com");
       expect(mockSavePage).not.toHaveBeenCalled();
     });
 

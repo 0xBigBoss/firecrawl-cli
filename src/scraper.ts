@@ -1,3 +1,4 @@
+import { handleError } from "./error-formatter";
 import { createFirecrawlApp } from "./libs/firecrawl-client";
 import { loggers } from "./logger";
 import type { ScrapeOptions } from "./schemas/cli";
@@ -16,6 +17,7 @@ export interface ScrapeResult {
   successCount: number;
   errorCount: number;
   totalUrls: number;
+  errors: Array<{ url: string; message: string }>;
 }
 
 export async function scrape(urls: string[], options: ScrapeOptions): Promise<ScrapeResult> {
@@ -84,6 +86,7 @@ export async function scrape(urls: string[], options: ScrapeOptions): Promise<Sc
 
   let successCount = 0;
   let errorCount = 0;
+  const errors: Array<{ url: string; message: string }> = [];
 
   // Scrape each URL
   for (let i = 0; i < urls.length; i++) {
@@ -156,9 +159,11 @@ export async function scrape(urls: string[], options: ScrapeOptions): Promise<Sc
       successCount++;
     } catch (error) {
       errorCount++;
-      loggers.error("Failed to scrape %s: %o", url, error);
+      const errorMessage = handleError(error, url, "scrape");
+      errors.push({ url, message: errorMessage });
+
       if (isVerboseEnabled()) {
-        console.error(`✗ Failed to scrape ${url}: ${error}`);
+        console.error(`✗ ${errorMessage}`);
       }
     }
   }
@@ -168,5 +173,6 @@ export async function scrape(urls: string[], options: ScrapeOptions): Promise<Sc
     successCount,
     errorCount,
     totalUrls: urls.length,
+    errors,
   };
 }

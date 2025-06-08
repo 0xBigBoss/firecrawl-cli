@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { version } from "../package.json";
 import {
   addCrawlOptions,
   addGlobalOptions,
@@ -19,7 +20,7 @@ import { renderComponent } from "./render";
 import { enableVerbose } from "./verbose-logger";
 
 const log = loggers.cli;
-const VERSION = "1.1.0";
+const VERSION = version;
 
 export function createCLI(): Command {
   const program = new Command();

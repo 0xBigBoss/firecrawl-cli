@@ -6,7 +6,7 @@ pre-commit:
       stage_fixed: true
     typecheck:
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx}"
-      run: bunx tsgo --noEmit --project tsconfig.json
+      run: bunx tsc --noEmit
 pre-push:
   commands:
     check:
