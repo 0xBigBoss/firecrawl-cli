@@ -1,5 +1,11 @@
 # fcrawl
 
+## 0.3.1
+
+### Patch Changes
+
+- [`13f3296`](https://github.com/0xBigBoss/firecrawl-cli/commit/13f32961979c923c3cb4973a4f34f8a24678e138) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Fix flaky idempotency key tests by generating unique keys per test run
+
 ## 0.3.0
 
 ### Minor Changes
