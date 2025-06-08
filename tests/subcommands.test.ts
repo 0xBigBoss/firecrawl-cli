@@ -138,7 +138,7 @@ describe("subcommand integration tests", () => {
     });
 
     it("should accept idempotency key option", async () => {
-      const idempotencyKey = "test-idempotency-key-12345";
+      const idempotencyKey = `test-idempotency-key-${Date.now()}-${Math.random().toString(36).substring(2)}`;
       const result =
         await $`${fcrawlPath} scrape https://example.com --idempotency-key ${idempotencyKey} -o ${testOutputDir} --api-url ${firecrawlApiUrl}`.quiet();
 
@@ -177,7 +177,7 @@ describe("subcommand integration tests", () => {
     });
 
     it("should accept idempotency key option", async () => {
-      const idempotencyKey = "test-crawl-idempotency-key-67890";
+      const idempotencyKey = `test-crawl-idempotency-key-${Date.now()}-${Math.random().toString(36).substring(2)}`;
       const result =
         await $`${fcrawlPath} crawl https://example.com --limit 1 --idempotency-key ${idempotencyKey} -o ${testOutputDir} --api-url ${firecrawlApiUrl}`.quiet();
 
