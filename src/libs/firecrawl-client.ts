@@ -39,8 +39,13 @@ function isLocalInstance(url?: string): boolean {
  * @returns Configured FirecrawlApp instance
  */
 export function createFirecrawlApp(config: FirecrawlConfig = {}): FirecrawlApp {
-  const apiUrl = config.apiUrl || process.env.FIRECRAWL_API_URL;
+  let apiUrl = config.apiUrl || process.env.FIRECRAWL_API_URL;
   let apiKey = config.apiKey || process.env.FIRECRAWL_API_KEY;
+
+  // Normalize API URL by removing trailing slash
+  if (apiUrl) {
+    apiUrl = apiUrl.replace(/\/$/, "");
+  }
 
   // Fix for local instances: if no API key is provided for local instances,
   // use a dummy key to prevent WebSocket protocol errors

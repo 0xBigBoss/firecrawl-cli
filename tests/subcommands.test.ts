@@ -297,5 +297,59 @@ describe("subcommand integration tests", () => {
       expect(result.exitCode).toBe(1);
       expect(result.stderr.toString()).toContain("missing required argument");
     });
+
+    it("should handle invalid API URL format", async () => {
+      const result = await $`${fcrawlPath} scrape https://example.com --api-url invalid-url`
+        .nothrow()
+        .quiet();
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr.toString()).toContain("Invalid API URL format");
+    });
+
+    it("should handle malformed API URL", async () => {
+      const result = await $`${fcrawlPath} scrape https://example.com --api-url "http://"`
+        .nothrow()
+        .quiet();
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr.toString()).toContain("Invalid API URL format");
+    });
+
+    it("should handle missing API configuration", async () => {
+      // Clear environment variables for this test
+      const originalApiUrl = process.env.FIRECRAWL_API_URL;
+      const originalApiKey = process.env.FIRECRAWL_API_KEY;
+
+      process.env.FIRECRAWL_API_URL = undefined;
+      process.env.FIRECRAWL_API_KEY = undefined;
+
+      const result = await $`${fcrawlPath} scrape https://example.com`.nothrow().quiet();
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr.toString()).toContain("Firecrawl API configuration missing");
+
+      // Restore environment variables
+      if (originalApiUrl) {
+        process.env.FIRECRAWL_API_URL = originalApiUrl;
+      }
+      if (originalApiKey) {
+        process.env.FIRECRAWL_API_KEY = originalApiKey;
+      }
+    });
+
+    it("should accept API URL with trailing slash", async () => {
+      const result =
+        await $`${fcrawlPath} scrape https://example.com --api-url http://localhost:3002/ --timeout 1000`
+          .nothrow()
+          .quiet();
+
+      // This should not fail due to URL validation (may fail due to network)
+      // The important thing is that it doesn't exit with code 1 due to URL format
+      if (result.exitCode === 1) {
+        // If it does exit with 1, it should not be due to URL validation
+        expect(result.stderr.toString()).not.toContain("Invalid API URL format");
+      }
+    });
   });
 });
