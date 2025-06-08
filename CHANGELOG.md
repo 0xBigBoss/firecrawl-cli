@@ -1,5 +1,15 @@
 # fcrawl
 
+## 0.3.0
+
+### Minor Changes
+
+- [`769e174`](https://github.com/0xBigBoss/firecrawl-cli/commit/769e174f20d12f77d8691df6d45df9af3544f754) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Adds support for idempotency key, bug fixes, and TUI improvements
+
+### Patch Changes
+
+- [`969b7d0`](https://github.com/0xBigBoss/firecrawl-cli/commit/969b7d000ea2001b2799a52c4423e92971db7af3) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Better output and error logging
+
 ## 0.2.5
 
 ### Patch Changes
