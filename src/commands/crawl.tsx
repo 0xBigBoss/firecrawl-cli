@@ -64,7 +64,7 @@ function CrawlProgress({
       </Box>
 
       <Box marginTop={1}>
-        {state.status === "crawling" && (
+        {(state.status === "crawling" || state.status === "done") && (
           <Text color="green">
             <Spinner type="dots" /> Progress: {state.pagesCrawled}/{limit} pages (
             {progress.toFixed(1)}%)
@@ -292,10 +292,8 @@ export default function CrawlCommand({ args: [url], options }: Props) {
             setState((prev) => ({ ...prev, status: "done" }));
 
             // Clean up and exit
-            setTimeout(() => {
-              watcher.close();
-              app.exit();
-            }, 1000); // Give user a moment to see the final status
+            watcher.close();
+            app.exit();
           });
         }
       } catch (err) {
