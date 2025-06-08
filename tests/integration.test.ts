@@ -45,7 +45,7 @@ describe("fcrawl executable integration tests", () => {
 
   test("should display version", async () => {
     const result = await $`${fcrawlBinary} --version`.text();
-    expect(result).toContain("1.1.0");
+    expect(result).toContain((await import("../package.json")).version);
   });
 
   test("should show help when no URL provided", async () => {

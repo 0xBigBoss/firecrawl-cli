@@ -41,7 +41,8 @@ export function addCrawlOptions(command: Command): Command {
     .option("--ignore-query-parameters", "Ignore query parameters when comparing URLs")
     .option("--regex-on-full-url", "Apply include/exclude regex patterns on full URL")
     .option("--delay <ms>", "Delay between requests in ms", Number.parseInt)
-    .option("--max-discovery-depth <number>", "Maximum depth for URL discovery", Number.parseInt);
+    .option("--max-discovery-depth <number>", "Maximum depth for URL discovery", Number.parseInt)
+    .option("--idempotency-key <key>", "Idempotency key for request deduplication");
 }
 
 // Common scrape options
@@ -58,7 +59,8 @@ export function addScrapeOptions(command: Command): Command {
     .option("--skip-tls-verification", "Skip TLS certificate verification")
     .option("--timeout <ms>", "Request timeout in ms", Number.parseInt)
     .option("--no-parse-pdf", "Don't parse PDF files")
-    .option("--remove-base64-images", "Remove base64 images");
+    .option("--remove-base64-images", "Remove base64 images")
+    .option("--idempotency-key <key>", "Idempotency key for request deduplication");
 }
 
 // Base action handler that validates API config and merges options
@@ -106,6 +108,7 @@ export function transformCrawlOptions(options: any): any {
     ignoreQueryParameters: options.ignoreQueryParameters || false,
     regexOnFullUrl: options.regexOnFullUrl || false,
     maxDiscoveryDepth: options.maxDiscoveryDepth,
+    idempotencyKey: options.idempotencyKey,
   };
 }
 
@@ -116,5 +119,6 @@ export function transformScrapeOptions(options: any): any {
     includeTags: options.includeTags,
     excludeTags: options.excludeTags,
     headers: options.headers ? JSON.parse(options.headers) : undefined,
+    idempotencyKey: options.idempotencyKey,
   };
 }

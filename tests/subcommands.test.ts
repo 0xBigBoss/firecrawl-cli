@@ -134,7 +134,24 @@ describe("subcommand integration tests", () => {
       expect(result.stdout.toString()).toContain("Scrape one or more URLs");
       expect(result.stdout.toString()).toContain("--formats");
       expect(result.stdout.toString()).toContain("--screenshot");
+      expect(result.stdout.toString()).toContain("--idempotency-key");
     });
+
+    it("should accept idempotency key option", async () => {
+      const idempotencyKey = "test-idempotency-key-12345";
+      const result =
+        await $`${fcrawlPath} scrape https://example.com --idempotency-key ${idempotencyKey} -o ${testOutputDir} --api-url ${firecrawlApiUrl}`.quiet();
+
+      expect(result.exitCode).toBe(0);
+
+      // Check that the file was created
+      const expectedPath = join(testOutputDir, "example.com", "index.md");
+      expect(existsSync(expectedPath)).toBe(true);
+
+      // Verify content
+      const content = await readFile(expectedPath, "utf-8");
+      expect(content).toContain("Example Domain");
+    }, 10000);
   });
 
   describe("crawl subcommand", () => {
@@ -156,6 +173,16 @@ describe("subcommand integration tests", () => {
       expect(result.exitCode).toBe(0);
       expect(result.stdout.toString()).toContain("Crawl a website");
       expect(result.stdout.toString()).toContain("--limit");
+      expect(result.stdout.toString()).toContain("--idempotency-key");
+    });
+
+    it("should accept idempotency key option", async () => {
+      const idempotencyKey = "test-crawl-idempotency-key-67890";
+      const result =
+        await $`${fcrawlPath} crawl https://example.com --limit 1 --idempotency-key ${idempotencyKey} -o ${testOutputDir} --api-url ${firecrawlApiUrl}`.quiet();
+
+      expect(result.exitCode).toBe(0);
+      // Skip file checks due to Firecrawl's link discovery issues
     });
 
     it("should accept new crawl options", async () => {

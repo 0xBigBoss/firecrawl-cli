@@ -97,6 +97,39 @@ FIRECRAWL_API_KEY=fc-YOUR_KEY           # For cloud API
 - Tests use mocked Firecrawl API on all platforms
 - Real Firecrawl instance runs on Linux for future integration testing
 
+## Firecrawl JS SDK References
+
+### Types and Interfaces
+**Source**: `node_modules/@mendable/firecrawl-js/src/index.ts`  
+**Types**: `node_modules/@mendable/firecrawl-js/dist/index.d.ts`  
+**Version**: `1.25.3` (see package.json)
+
+Key interfaces used throughout the project:
+- `FirecrawlDocument<T>` - Core document structure with metadata, content formats
+- `FirecrawlDocumentMetadata` - Contains title, description, ogTags, sourceURL, etc.
+- `ScrapeParams<T>` - Configuration for scraping operations 
+- `CrawlParams` - Configuration for crawling operations
+- `MapParams` - Configuration for URL discovery
+- `Action[]` - Browser automation actions
+- `CrawlScrapeOptions` - Content format options (markdown, html, links, etc.)
+- `ScrapeResponse<T>`, `CrawlStatusResponse`, `MapResponse` - API response types
+- `FirecrawlError` - Custom error class with statusCode and details
+
+### Important URL Access Pattern
+Firecrawl API returns URLs in `metadata.url` or `metadata.sourceURL`, NOT `page.url`:
+```typescript
+const pageUrl = page.metadata?.url || page.metadata?.sourceURL || page.url;
+```
+
+### Content Formats
+Supported formats in `CrawlScrapeOptions.formats`:
+- `"markdown"` - Main content format used by fcrawl
+- `"html"`, `"rawHtml"` - HTML variants  
+- `"links"` - Extract all links
+- `"screenshot"`, `"screenshot@fullPage"` - Visual captures
+- `"extract"` - LLM-powered data extraction
+- `"json"` - Structured data extraction
+
 ## Known Working Examples
 
 ```bash

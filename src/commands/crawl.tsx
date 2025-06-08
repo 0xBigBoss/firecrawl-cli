@@ -31,6 +31,7 @@ type Props = {
     verbose?: boolean;
     apiUrl?: string;
     apiKey?: string;
+    idempotencyKey?: string;
   };
 };
 
@@ -202,7 +203,7 @@ export default function CrawlCommand({ args: [url], options }: Props) {
         // Try to use WebSocket monitoring if available
         let watcher: CrawlWatcher | null = null;
         try {
-          watcher = await firecrawlApp.crawlUrlAndWatch(url, crawlOptions);
+          watcher = await firecrawlApp.crawlUrlAndWatch(url, crawlOptions, options.idempotencyKey);
           crawlWatcherRef.current = watcher;
         } catch (wsError) {
           // If WebSocket fails (e.g., local instance doesn't support it), fall back to regular crawl
@@ -217,7 +218,12 @@ export default function CrawlCommand({ args: [url], options }: Props) {
             ],
           }));
 
-          const crawlResponse = await firecrawlApp.crawlUrl(url, crawlOptions);
+          const crawlResponse = await firecrawlApp.crawlUrl(
+            url,
+            crawlOptions,
+            5,
+            options.idempotencyKey,
+          );
 
           if (!crawlResponse.success) {
             throw new Error(`Failed to crawl: ${crawlResponse.error}`);

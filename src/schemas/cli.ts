@@ -27,6 +27,7 @@ export interface ScrapeOptions extends BaseOptions {
   timeout?: number;
   parsePDF?: boolean;
   removeBase64Images?: boolean;
+  idempotencyKey?: string;
 }
 
 export interface CrawlOptions extends BaseOptions {
@@ -48,6 +49,7 @@ export interface CrawlOptions extends BaseOptions {
   regexOnFullUrl?: boolean;
   delay?: number;
   maxDiscoveryDepth?: number;
+  idempotencyKey?: string;
 }
 
 export interface MapOptions extends BaseOptions {
