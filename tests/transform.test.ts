@@ -112,6 +112,99 @@ Bare: ../../docs.md
     });
   });
 
+  describe("image URL transformation", () => {
+    it("should keep external image URLs as absolute", () => {
+      const content = "![Logo](https://cdn.example.org/logo.png)";
+      const currentUrl = "https://example.com/docs/guide";
+      const result = transformLinks(content, currentUrl, baseUrl);
+      expect(result).toBe("![Logo](https://cdn.example.org/logo.png)");
+    });
+
+    it("should keep internal image URLs as absolute URLs", () => {
+      const content = "![Screenshot](https://example.com/images/screenshot.png)";
+      const currentUrl = "https://example.com/docs/guide";
+      const result = transformLinks(content, currentUrl, baseUrl);
+      expect(result).toBe("![Screenshot](https://example.com/images/screenshot.png)");
+    });
+
+    it("should handle images with empty alt text", () => {
+      const content = "![](https://external.com/image.jpg)";
+      const currentUrl = "https://example.com/docs";
+      const result = transformLinks(content, currentUrl, baseUrl);
+      expect(result).toBe("![](https://external.com/image.jpg)");
+    });
+
+    it("should preserve external images from various CDNs", () => {
+      const content = `
+![GitHub Avatar](https://github.githubassets.com/assets/avatar.svg)
+![AWS Icon](https://s3.amazonaws.com/icons/aws.png)
+![CDN Image](https://cdn.jsdelivr.net/npm/logo.png)
+      `.trim();
+      const currentUrl = "https://example.com/about";
+      const result = transformLinks(content, currentUrl, baseUrl);
+      const expected = `
+![GitHub Avatar](https://github.githubassets.com/assets/avatar.svg)
+![AWS Icon](https://s3.amazonaws.com/icons/aws.png)
+![CDN Image](https://cdn.jsdelivr.net/npm/logo.png)
+      `.trim();
+      expect(result).toBe(expected);
+    });
+
+    it("should handle mixed images and links correctly", () => {
+      const content = `
+![External Logo](https://cdn.other.com/logo.png)
+[Internal Link](https://example.com/about)
+![Internal Image](https://example.com/assets/icon.svg)
+[External Link](https://other.com/page)
+      `.trim();
+      const currentUrl = "https://example.com/docs/guide";
+      const result = transformLinks(content, currentUrl, baseUrl);
+      const expected = `
+![External Logo](https://cdn.other.com/logo.png)
+[Internal Link](../about.md)
+![Internal Image](https://example.com/assets/icon.svg)
+[External Link](https://other.com/page)
+      `.trim();
+      expect(result).toBe(expected);
+    });
+
+    it("should handle images with protocol-relative URLs", () => {
+      const content = "![Protocol Relative](//cdn.example.org/image.png)";
+      const currentUrl = "https://example.com/docs";
+      const result = transformLinks(content, currentUrl, baseUrl);
+      expect(result).toBe("![Protocol Relative](//cdn.example.org/image.png)");
+    });
+
+    it("should handle images with query parameters and fragments", () => {
+      const content = "![Avatar](https://external.com/avatar.jpg?size=100#profile)";
+      const currentUrl = "https://example.com/profile";
+      const result = transformLinks(content, currentUrl, baseUrl);
+      expect(result).toBe("![Avatar](https://external.com/avatar.jpg?size=100#profile)");
+    });
+
+    it("should keep internal images as absolute URLs regardless of extension", () => {
+      const content = `
+![PNG](https://example.com/image.png)
+![JPG](https://example.com/photo.jpg)
+![JPEG](https://example.com/photo.jpeg)
+![SVG](https://example.com/icon.svg)
+![GIF](https://example.com/animation.gif)
+![WebP](https://example.com/modern.webp)
+      `.trim();
+      const currentUrl = "https://example.com/docs/guide";
+      const result = transformLinks(content, currentUrl, baseUrl);
+      const expected = `
+![PNG](https://example.com/image.png)
+![JPG](https://example.com/photo.jpg)
+![JPEG](https://example.com/photo.jpeg)
+![SVG](https://example.com/icon.svg)
+![GIF](https://example.com/animation.gif)
+![WebP](https://example.com/modern.webp)
+      `.trim();
+      expect(result).toBe(expected);
+    });
+  });
+
   describe("edge cases", () => {
     it("should handle links with special characters", () => {
       const content = "[Link](https://example.com/path-with-dash_underscore)";
