@@ -3,6 +3,19 @@ import { calculateRelativePath, urlToFilePath } from "./utils/url";
 
 const log = loggers.transform;
 
+/**
+ * Transform markdown links and images in content for optimal viewing experience.
+ *
+ * Image Handling Strategy:
+ * - External images (different domain): Keep as absolute URLs to preserve functionality
+ * - Internal images (same domain): Keep as absolute URLs so they remain viewable with internet
+ * - This ensures all images work when users have internet connectivity
+ *
+ * Link Handling:
+ * - Internal links: Transform to relative .md file paths for local navigation
+ * - External links: Keep as absolute URLs
+ * - Anchors: Preserve as-is
+ */
 export function transformLinks(content: string, currentPageUrl: string, baseUrl: string): string {
   log("Transforming links for page: %s", currentPageUrl);
   const currentUrl = new URL(currentPageUrl);
@@ -11,11 +24,11 @@ export function transformLinks(content: string, currentPageUrl: string, baseUrl:
   // Get the current file path to calculate relative paths
   const currentFilePath = urlToFilePath(currentPageUrl, baseUrl);
 
-  // Regular expression to match markdown links and bare URLs
-  // Modified to capture empty link text and handle bare URLs at start/in parentheses
-  const linkRegex = /\[([^\]]*)\]\(([^)]+)\)|(^|[\s(])(https?:\/\/[^\s\)]+)/g;
+  // Regular expression to match markdown links/images and bare URLs
+  // Captures: optional '!' for images, link text, URL, and bare URLs at start/in parentheses
+  const linkRegex = /(!?)\[([^\]]*)\]\(([^)]+)\)|(^|[\s(])(https?:\/\/[^\s\)]+)/g;
 
-  return content.replace(linkRegex, (match, linkText, linkUrl, prefix, bareUrl) => {
+  return content.replace(linkRegex, (match, isImage, linkText, linkUrl, prefix, bareUrl) => {
     // Handle bare URLs
     if (bareUrl) {
       try {
@@ -33,7 +46,7 @@ export function transformLinks(content: string, currentPageUrl: string, baseUrl:
       return match;
     }
 
-    // Handle markdown links
+    // Handle markdown links and images
     if (!linkUrl) {
       return match;
     }
@@ -45,16 +58,13 @@ export function transformLinks(content: string, currentPageUrl: string, baseUrl:
 
     try {
       let targetUrl: URL;
-      let _isAbsolute = false;
 
       // Handle absolute URLs
       if (linkUrl.startsWith("http://") || linkUrl.startsWith("https://")) {
         targetUrl = new URL(linkUrl);
-        _isAbsolute = true;
       } else if (linkUrl.startsWith("//")) {
         // Protocol-relative URLs
         targetUrl = new URL(`${currentUrl.protocol}${linkUrl}`);
-        _isAbsolute = true;
       } else if (linkUrl.startsWith("/")) {
         // Root-relative URLs
         targetUrl = new URL(linkUrl, base);
@@ -65,23 +75,30 @@ export function transformLinks(content: string, currentPageUrl: string, baseUrl:
 
       // Check if it's an internal link
       if (targetUrl.hostname !== base.hostname) {
+        // External link - for images, keep absolute URL; for links, keep as is
+        if (isImage) {
+          log("Keeping external image URL: %s", linkUrl);
+          return `![${linkText}](${linkUrl})`;
+        }
         return match; // External link, keep as is
       }
 
+      // Internal link/image - handle differently
+      if (isImage) {
+        // For internal images, keep as absolute URL so they remain viewable
+        log("Keeping internal image as absolute URL: %s", linkUrl);
+        return `![${linkText}](${linkUrl})`;
+      }
+
+      // For internal links, transform to relative .md paths
       // Strip query parameters and hash
       const cleanUrl = `${targetUrl.protocol}//${targetUrl.hostname}${targetUrl.pathname}`;
-
-      // Get the target file path
       const targetPath = urlToFilePath(cleanUrl, baseUrl);
-
-      // Calculate relative path from current file to target
       const relativePath = calculateRelativePath(currentFilePath, targetPath);
 
       // Preserve hash if present
       const hash = targetUrl.hash || "";
 
-      // For absolute internal links, convert to relative
-      // For relative internal links, adjust the path
       log("Transformed link: %s -> %s", linkUrl, relativePath);
       return `[${linkText}](${relativePath}${hash})`;
     } catch (_e) {
