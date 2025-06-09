@@ -1,5 +1,17 @@
 # fcrawl
 
+## 0.3.2
+
+### Patch Changes
+
+- [#17](https://github.com/0xBigBoss/firecrawl-cli/pull/17) [`4434939`](https://github.com/0xBigBoss/firecrawl-cli/commit/4434939b401e84fcef4608e97bf3dbb8045b6d00) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Fix image URL handling to preserve absolute URLs for better viewing experience
+
+  - Internal images now keep absolute URLs instead of broken relative paths
+  - External images continue to work as absolute URLs
+  - All images remain viewable when users have internet connectivity
+  - Internal links still transform to relative .md paths for local navigation
+  - Fixes issue where images had incorrect .md extensions appended
+
 ## 0.3.1
 
 ### Patch Changes
