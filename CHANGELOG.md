@@ -1,5 +1,16 @@
 # fcrawl
 
+## 0.3.3
+
+### Patch Changes
+
+- [`75dc083`](https://github.com/0xBigBoss/firecrawl-cli/commit/75dc0831e73978553308ec132824ea15d3732bf7) Thanks [@0xBigBoss](https://github.com/0xBigBoss)! - Fix duplicate .md extension issue in URL-to-file-path transformation
+
+  - Prevent duplicate .md extensions when URLs already contain .md
+  - URLs like `https://example.com/README.md` now correctly map to `./crawls/example.com/README.md` instead of `./crawls/example.com/README.md.md`
+  - Affects both markdown link transformation and bare URL handling
+  - Maintains backward compatibility for URLs without .md extensions
+
 ## 0.3.2
 
 ### Patch Changes
