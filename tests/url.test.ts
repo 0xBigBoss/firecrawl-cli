@@ -44,6 +44,18 @@ describe("urlToFilePath", () => {
       "./crawls/example.com/search.md",
     );
   });
+
+  it("should not add duplicate .md extension when URL already has .md", () => {
+    expect(urlToFilePath("https://example.com/docs/README.md", "https://example.com")).toBe(
+      "./crawls/example.com/docs/README.md",
+    );
+  });
+
+  it("should handle .md files in nested paths", () => {
+    expect(urlToFilePath("https://example.com/docs/api/guide.md", "https://example.com")).toBe(
+      "./crawls/example.com/docs/api/guide.md",
+    );
+  });
 });
 
 describe("calculateRelativePath", () => {

@@ -226,5 +226,19 @@ Bare: ../../docs.md
       const result = transformLinks(content, currentUrl, baseUrl);
       expect(result).toBe("See this (note.md) for details");
     });
+
+    it("should not add duplicate .md extension to links that already have .md", () => {
+      const content = "[README](https://example.com/docs/README.md)";
+      const currentUrl = "https://example.com/guide";
+      const result = transformLinks(content, currentUrl, baseUrl);
+      expect(result).toBe("[README](docs/README.md)");
+    });
+
+    it("should handle bare URLs that already have .md extension", () => {
+      const content = "Check out https://example.com/docs/guide.md for more details";
+      const currentUrl = "https://example.com/about";
+      const result = transformLinks(content, currentUrl, baseUrl);
+      expect(result).toBe("Check out docs/guide.md for more details");
+    });
   });
 });

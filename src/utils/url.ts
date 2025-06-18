@@ -22,7 +22,7 @@ export function urlToFilePath(
     pathname = "/index";
   }
 
-  // Remove common file extensions if present
+  // Remove common file extensions if present, but preserve .md extension
   const extensionsToRemove = [".html", ".htm", ".php", ".asp", ".aspx"];
   for (const ext of extensionsToRemove) {
     if (pathname.endsWith(ext)) {
@@ -31,8 +31,11 @@ export function urlToFilePath(
     }
   }
 
+  // Check if pathname already ends with the target extension to avoid duplicates
+  const finalExtension = pathname.endsWith(extension) ? "" : extension;
+
   // Build file path with specified extension
-  const filePath = `${outputDir}/${base.hostname}${pathname}${extension}`;
+  const filePath = `${outputDir}/${base.hostname}${pathname}${finalExtension}`;
 
   return filePath;
 }
